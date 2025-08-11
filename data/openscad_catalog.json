@@ -1,0 +1,35 @@
+{
+  "components": [
+    {
+      "id": "cube",
+      "module": "cube",
+      "includes": [],
+      "params": [
+        { "name": "size", "type": "float[]", "unit": "mm", "required": true, "synonyms": ["size", "dimensions", "length width height", "lwh"] }
+      ],
+      "intent_keywords": ["cube", "box", "rectangular block"]
+    },
+    {
+      "id": "cylinder",
+      "module": "cylinder",
+      "includes": [],
+      "params": [
+        { "name": "d", "type": "float", "unit": "mm", "required": false, "synonyms": ["diameter", "d="] },
+        { "name": "r", "type": "float", "unit": "mm", "required": false, "synonyms": ["radius", "r="] },
+        { "name": "h", "type": "float", "unit": "mm", "required": true, "synonyms": ["height", "h=", "length"] }
+      ],
+      "intent_keywords": ["cylinder", "rod", "tube", "pipe"]
+    },
+    {
+      "id": "sphere",
+      "module": "sphere",
+      "includes": [],
+      "params": [
+        { "name": "r", "type": "float", "unit": "mm", "required": true, "synonyms": ["radius", "r="] }
+      ],
+      "intent_keywords": ["sphere", "ball"]
+    }
+  ]
+}
+
+

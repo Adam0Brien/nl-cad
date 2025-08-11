@@ -1,0 +1,47 @@
+{
+  "components": [
+    {
+      "id": "metric_bolt",
+      "includes": ["BOSL/constants.scad", "BOSL/metric_screws.scad"],
+      "module": "metric_bolt",
+      "params": [
+        { "name": "size", "type": "int", "unit": "mm", "required": true, "synonyms": ["m", "size", "diameter", "thread", "m-size"] },
+        { "name": "l", "type": "float", "unit": "mm", "required": true, "synonyms": ["length", "long", "l"] },
+        { "name": "coarse", "type": "bool", "default": true, "synonyms": ["coarse", "course", "fine"] }
+      ],
+      "intent_keywords": ["bolt", "screw", "cap", "fastener"]
+    },
+    {
+      "id": "metric_nut",
+      "includes": ["BOSL/constants.scad", "BOSL/metric_screws.scad"],
+      "module": "metric_nut",
+      "params": [
+        { "name": "size", "type": "int", "unit": "mm", "required": true, "synonyms": ["m", "size", "diameter", "thread", "m-size"] }
+      ],
+      "intent_keywords": ["nut", "hex nut", "lock nut"]
+    },
+    {
+      "id": "cuboid",
+      "includes": ["BOSL/constants.scad", "BOSL/shapes.scad"],
+      "module": "cuboid",
+      "params": [
+        { "name": "size", "type": "float[]", "unit": "mm", "required": true, "synonyms": ["size", "dimensions", "length width height", "lwh"] },
+        { "name": "fillet", "type": "float", "unit": "mm", "required": false, "synonyms": ["fillet", "round", "radius"] },
+        { "name": "chamfer", "type": "float", "unit": "mm", "required": false, "synonyms": ["chamfer", "bevel"] }
+      ],
+      "intent_keywords": ["cuboid", "cube", "box", "rectangular"]
+    },
+    {
+      "id": "cyl",
+      "includes": ["BOSL/constants.scad", "BOSL/shapes.scad"],
+      "module": "cyl",
+      "params": [
+        { "name": "l", "type": "float", "unit": "mm", "required": true, "synonyms": ["length", "l", "h", "long"] },
+        { "name": "d", "type": "float", "unit": "mm", "required": true, "synonyms": ["diameter", "d", "od"] }
+      ],
+      "intent_keywords": ["cyl", "cylinder", "rod", "tube", "pipe"]
+    }
+  ]
+}
+
+

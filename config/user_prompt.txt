@@ -1,0 +1,17 @@
+## USER REQUEST
+{description}
+
+## AVAILABLE COMPONENTS
+{component_list}
+
+## TASK
+Extract the component type and all relevant parameters from the user's request.
+
+## REQUIREMENTS
+- Identify the correct component from the available list
+- Extract all dimensions, sizes, and properties
+- Convert all units to millimeters
+- Return valid JSON with component_id and parameters
+
+## RESPONSE
+Return ONLY the JSON object, no other text or explanations.
