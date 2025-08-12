@@ -12,14 +12,19 @@ Turn natural language into OpenSCAD code
 # Install dependencies
 pip install -r requirements.txt
 
-# Generate a bolt
+# Generate a bolt (text input)
 python3 main.py -d "M6 x 20 bolt"
 
-# Generate a cube  
-python3 main.py -d "cuboid 20mm 30mm 40mm"
+# Generate using speech input 🎤
+python3 main.py --speech
 
-# Generate a cylinder
-python3 main.py -d "cyl length 40mm diameter 25mm"
+# Quick speech input (no confirmation)
+python3 main.py --quick-speech
+
+# Using make commands
+make speech                    # Speech with confirmation
+make quick-speech              # Quick speech mode
+make run DESCRIPTION="M6 bolt" # Text input
 
 # Run test cases to see examples
 python3 main.py --test
@@ -28,6 +33,7 @@ python3 main.py --test
 **What You Can Generate:**
 - **Fasteners:** "M8 x 25 bolt", "M10 nut", "3/8 inch washer"
 - **Shapes:** "cuboid 20mm 30mm 40mm", "cyl length 40mm diameter 25mm"
+- **🎤 Speech Input:** Just speak naturally: "Create an M8 bolt 25 millimeters long"
 
 **How It Works:**
 1. You type: "M8 x 25 bolt"
@@ -46,7 +52,9 @@ python3 main.py --test
 - `"box roughly the size of a smartphone"` → AI interprets as ~70x140mm
 
 **Advanced Features:**
+- **🎤 Speech Recognition**: Speak your CAD requests naturally
 - **AI Integration**: Uses Ollama for complex, abstract descriptions
+- **Dual Input Modes**: Type or speak - your choice!
 
 **Limits:**
 - Simple shapes (no complex assemblies)
@@ -55,6 +63,8 @@ python3 main.py --test
 - **"No component found"** → Try simpler words: "bolt" instead of "hex head fastener"
 - **Missing length** → Include it: "M6 x 25 bolt" not just "M6 bolt"
 - **AI not working** → Check if Ollama is running: `ollama list`
+- **🎤 Speech not working** → Install audio dependencies: `pip install SpeechRecognition pyaudio`
+- **Microphone issues** → Test with: `python3 speech/speech_recognizer.py`
 
 **Project Structure:**
 ```
@@ -62,6 +72,9 @@ Hackathon/
 ├── main.py                    # Main program (just run this)
 ├── generation/
 │   └── bosl_generator.py     # The AI logic and parameter extraction
+├── speech/                    # 🎤 Speech recognition module
+│   ├── __init__.py
+│   └── speech_recognizer.py  # Speech-to-text functionality
 ├── data/
 │   ├── bosl_catalog.json     # BOSL component definitions
 │   └── openscad_catalog.json # Basic OpenSCAD primitives

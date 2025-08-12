@@ -9,7 +9,7 @@ from typing import Dict, List, Optional
 
 
 class BOSLGenerator:
-    def __init__(self, catalog_path: str = "data/openscad_catalog.json", 
+    def __init__(self, catalog_path: str = "data/bosl_catalog.json", 
                  system_prompt_path: str = "config/system_prompt.txt",
                  user_prompt_path: str = "config/user_prompt.txt"):
         """Initialize with the component catalog and prompt files"""
@@ -51,11 +51,10 @@ class BOSLGenerator:
         # Step 2: Extract parameters from the description
         params = self._extract_parameters(description, component)
         
-        # Step 2.5: Validate required params are present; if not, return a readable error
+        # Step 2.5: Validate required params are present; if not, return a helpful error
         missing = self._missing_required_params(component, params)
         if missing:
-            missing_list = ", ".join(missing)
-            return f"// Error: Missing required parameter(s) for {component['id']}: {missing_list}. Please include these in your request."
+            return self._generate_helpful_error(component, missing, params)
         
         # Step 3: Generate the OpenSCAD code
         return self._generate_code(component, params)
@@ -500,6 +499,121 @@ class BOSLGenerator:
             if p.get('required', False) and p['name'] not in params:
                 missing.append(p['name'])
         return missing
+    
+    def _generate_helpful_error(self, component: Dict, missing: List[str], current_params: Dict) -> str:
+        """Generate helpful error message with examples for any component"""
+        comp_id = component['id']
+        help_lines = [f"// {comp_id.replace('_', ' ').title()} needs more parameters. Here are examples:"]
+        help_lines.append("//")
+        
+        # Add component-specific examples
+        examples = self._get_component_examples(comp_id)
+        for example in examples:
+            help_lines.append(f"// {example}")
+        
+        help_lines.append("//")
+        
+        # Show current parameters (if any)
+        if current_params:
+            help_lines.append("// Current parameters:")
+            for param, value in current_params.items():
+                help_lines.append(f"// ✓ {param}: {value}")
+            help_lines.append("//")
+        
+        # Show missing parameters with descriptions
+        help_lines.append("// Missing parameters:")
+        param_descriptions = self._get_param_descriptions(comp_id)
+        
+        for param in missing:
+            desc = param_descriptions.get(param, param)
+            help_lines.append(f"// ✗ {param}: {desc}")
+        
+        help_lines.append("//")
+        help_lines.append(f"// Try saying: '{self._get_speech_example(comp_id)}'")
+        
+        return "\n".join(help_lines)
+    
+    def _get_component_examples(self, comp_id: str) -> List[str]:
+        """Get example phrases for each component type"""
+        examples = {
+            "gear": [
+                "Small gear:  'gear 12 teeth 3mm pitch 6mm thick 3mm bore'",
+                "Medium gear: 'gear 20 teeth 5mm pitch 8mm thick 5mm bore'",
+                "Large gear:  'gear 30 teeth 6mm pitch 10mm thick 8mm bore'"
+            ],
+            "metric_bolt": [
+                "Small bolt: 'M6 x 20 bolt'",
+                "Medium bolt: 'M8 x 25 bolt'", 
+                "Large bolt: 'M10 x 50 bolt'"
+            ],
+            "cuboid": [
+                "Small box: 'cuboid 10mm 15mm 20mm'",
+                "Medium box: 'cuboid 20mm 30mm 40mm'",
+                "Large box: 'cuboid 50mm 75mm 100mm'"
+            ],
+            "cyl": [
+                "Small cylinder: 'cylinder 20mm long 10mm diameter'",
+                "Medium cylinder: 'cylinder 40mm long 25mm diameter'",
+                "Large cylinder: 'cylinder 80mm long 50mm diameter'"
+            ],
+            "metric_nut": [
+                "Small nut: 'M6 nut'",
+                "Medium nut: 'M8 nut'",
+                "Large nut: 'M10 nut'"
+            ],
+            "tray": [
+                "Simple tray: 'tray 100x60x30mm'",
+                "With columns: 'tray 150x100x40mm 3 columns'",
+                "With grid: 'tray 120x80x25mm 4 columns 3 rows'"
+            ]
+        }
+        return examples.get(comp_id, [f"'{comp_id} with required parameters'"])
+    
+    def _get_param_descriptions(self, comp_id: str) -> Dict[str, str]:
+        """Get human-friendly descriptions for parameters"""
+        descriptions = {
+            "gear": {
+                "mm_per_tooth": "circular pitch (3-6mm typical)",
+                "number_of_teeth": "teeth count (10-50 typical)", 
+                "thickness": "gear thickness (6-10mm typical)",
+                "hole_diameter": "center hole diameter (3-8mm typical)"
+            },
+            "metric_bolt": {
+                "size": "thread size (M6, M8, M10, etc.)",
+                "l": "length in mm (20-100mm typical)",
+                "coarse": "thread type (true=coarse, false=fine)"
+            },
+            "cuboid": {
+                "size": "dimensions [length, width, height] in mm"
+            },
+            "cyl": {
+                "l": "length/height in mm",
+                "d": "diameter in mm"
+            },
+            "metric_nut": {
+                "size": "thread size (M6, M8, M10, etc.)"
+            },
+            "tray": {
+                "dimensions": "tray size [length, width, height] in mm",
+                "thickness": "wall thickness (1-4mm typical)",
+                "n_columns": "number of columns (1-6 typical)",
+                "n_rows": "number of rows (1-6 typical)",
+                "curved": "rounded edges (true/false)"
+            }
+        }
+        return descriptions.get(comp_id, {})
+    
+    def _get_speech_example(self, comp_id: str) -> str:
+        """Get a speech-friendly example for each component"""
+        speech_examples = {
+            "gear": "gear 20 teeth 5 millimeter pitch 8 millimeter thick 5 millimeter bore",
+            "metric_bolt": "M8 bolt 25 millimeters long",
+            "cuboid": "cuboid 20 by 30 by 40 millimeters", 
+            "cyl": "cylinder 40 millimeters long 25 millimeters diameter",
+            "metric_nut": "M8 nut",
+            "tray": "tray 100 by 60 by 30 millimeters with 3 columns and 2 rows"
+        }
+        return speech_examples.get(comp_id, f"{comp_id} with all required parameters")
 
 
 # Simple usage example

@@ -21,6 +21,8 @@ help:
 	@echo "Usage (from nl-cad/):"
 	@echo "  make run DESCRIPTION='M6 x 20 bolt' [OUTPUT=output/file.scad]"
 	@echo "  make run-long DESCRIPTION='...' [OUTPUT=output/file.scad]   # longer timeout"
+	@echo "  make speech [OUTPUT=output/file.scad]                      # speech input with confirmation"
+	@echo "  make quick-speech [OUTPUT=output/file.scad]                # quick speech input"
 	@echo "  make test                                             # built-in tests"
 	@echo "  make pull-model                                       # ollama pull $(OLLAMA_MODEL)"
 
@@ -37,8 +39,16 @@ run-long:
 test:
 	$(PY) main.py --test
 
+# Speech input with confirmation
+speech:
+	$(PY) main.py --speech $(if $(OUTPUT),-o "$(OUTPUT)",)
+
+# Quick speech input (no confirmation)
+quick-speech:
+	$(PY) main.py --quick-speech $(if $(OUTPUT),-o "$(OUTPUT)",)
+
 # Pull current model
 pull-model:
 	ollama pull $(OLLAMA_MODEL)
 
-.PHONY: help run run-long test pull-model
+.PHONY: help run run-long speech quick-speech test pull-model

@@ -5,6 +5,7 @@ Simple BOSL Generator CLI - Easy to use and understand
 import click
 from pathlib import Path
 from generation.bosl_generator import BOSLGenerator
+from speech.speech_recognizer import speech_to_text_with_confirmation, quick_speech_to_text
 
 
 @click.command()
@@ -14,15 +15,44 @@ from generation.bosl_generator import BOSLGenerator
               help='Output file path (optional - will show code in terminal if not specified)')
 @click.option('--test', is_flag=True, 
               help='Run built-in test cases to see examples')
-def main(description, output, test):
+@click.option('--speech', is_flag=True,
+              help='Use speech input instead of typing description')
+@click.option('--quick-speech', is_flag=True,
+              help='Quick speech input (no confirmation)')
+def main(description, output, test, speech, quick_speech):
     """Generate OpenSCAD code from natural language descriptions"""
     
     if test:
         run_tests()
         return
     
+    # Handle speech input
+    if speech or quick_speech:
+        if description:
+            click.echo("Warning: Both description and speech specified. Using speech input.")
+        
+        try:
+            if quick_speech:
+                click.echo("🎤 Quick Speech Mode - Speak your CAD request:")
+                description = quick_speech_to_text(timeout=15.0)
+            else:
+                click.echo("🎤 Speech Mode - Speak your CAD request:")
+                description = speech_to_text_with_confirmation()
+            
+            if not description:
+                click.echo("❌ No speech input received. Exiting.")
+                return
+                
+        except ImportError:
+            click.echo("❌ Speech recognition not available. Please install requirements:")
+            click.echo("pip install SpeechRecognition pyaudio")
+            return
+        except Exception as e:
+            click.echo(f"❌ Speech recognition error: {e}")
+            return
+    
     if not description:
-        click.echo("Error: Please provide a description with -d or use --test to see examples")
+        click.echo("Error: Please provide a description with -d, use --speech, or use --test to see examples")
         return
     
     # Create generator and generate code

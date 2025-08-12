@@ -14,6 +14,8 @@ Allowed components and keys (all values in mm):
 - cuboid: {"size": [float, float, float]}  // array, not x/y/z keys
 - cyl: {"l": float, "d": float}
 - trapezoidal_threaded_rod: {"d": float, "l": float, "pitch": float}
+- gear: {"mm_per_tooth": float, "number_of_teeth": int, "thickness": float, "hole_diameter": float}
+- tray: {"dimensions": [float, float, float], "thickness": float, "n_columns": int, "n_rows": int, "curved": bool}
 
 Output shape:
 {
@@ -26,9 +28,14 @@ Pattern hints (generic):
 - diameter/size: "size 10mm", "diameter 12mm", "d=12", "M10"
 - bolt notation: "M10 x 50" → size=10, l=50
 - cuboid size array: "size 20mm 30mm 40mm", "20mm x 30mm x 40mm"
+- gear patterns: "20 teeth, 5mm pitch" → number_of_teeth=20, mm_per_tooth=5
+- gear common: thickness usually 6-10mm, hole_diameter for shaft (3-8mm typical)
+- tray patterns: "100x60x30mm, 3 columns, 2 rows" → dimensions=[100,60,30], n_columns=3, n_rows=2
 
 Examples (JSON only):
 - "bolt size 10mm, 50mm long, fine" → {"component_id":"metric_bolt","size":10,"l":50,"coarse":false}
 - "M10 x 50 bolt" → {"component_id":"metric_bolt","size":10,"l":50}
 - "cylinder 40mm long, 25mm diameter" → {"component_id":"cyl","l":40,"d":25}
 - "box 20mm x 30mm x 40mm" → {"component_id":"cuboid","size":[20,30,40]}
+- "gear 20 teeth 5mm pitch 8mm thick 5mm bore" → {"component_id":"gear","number_of_teeth":20,"mm_per_tooth":5,"thickness":8,"hole_diameter":5}
+- "tray 100x60x30mm with 3 columns 2 rows" → {"component_id":"tray","dimensions":[100,60,30],"n_columns":3,"n_rows":2}

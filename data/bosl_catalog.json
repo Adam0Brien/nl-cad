@@ -64,7 +64,45 @@
         "screw rod",
         "thread"
       ]
+    },
+    {
+      "id": "sphere",
+      "module": "sphere",
+      "includes": [],
+      "params": [
+        { "name": "r", "type": "float", "unit": "mm", "required": true, "synonyms": ["radius","size", "r="] }
+      ],
+      "intent_keywords": ["sphere", "ball", "circle"]
+    },
+    {
+      "id": "gear",
+      "includes": ["BOSL/constants.scad", "BOSL/involute_gears.scad"],
+      "module": "gear",
+      "params": [
+        { "name": "mm_per_tooth",   "type": "float", "unit": "mm", "required": true,  "synonyms": ["circular pitch", "circular_pitch", "mm per tooth", "mm-per-tooth", "cp"] },
+        { "name": "number_of_teeth","type": "int",   "unit": "",   "required": true,  "synonyms": ["teeth", "tooth_count", "z"] },
+        { "name": "thickness",      "type": "float", "unit": "mm", "required": true,  "synonyms": ["thickness", "face width", "width"] },
+        { "name": "hole_diameter",  "type": "float", "unit": "mm", "required": true,  "synonyms": ["bore", "inner diameter", "id", "shaft hole"] }
+      ],
+      "intent_keywords": ["gear", "spur gear", "helical gear", "involute", "cog", "toothed wheel"]
+    },
+    {
+      "id": "tray",
+      "includes": ["tray.scad"],
+      "module": "tray",
+      "params": [
+        { "name": "dimensions",     "type": "float[]", "unit": "mm", "required": true,  "synonyms": ["size", "dimensions", "length width height", "lwh"] },
+        { "name": "thickness",      "type": "float",   "unit": "mm", "required": false, "default": 2,     "synonyms": ["wall thickness", "thickness", "wall"] },
+        { "name": "n_columns",      "type": "int",     "unit": "",   "required": false, "default": 1,     "synonyms": ["columns", "col", "c"] },
+        { "name": "n_rows",         "type": "int",     "unit": "",   "required": false, "default": 1,     "synonyms": ["rows", "row", "r"] },
+        { "name": "curved",         "type": "bool",    "unit": "",   "required": false, "default": true,  "synonyms": ["curved", "rounded", "smooth"] },
+        { "name": "bottom_thickness", "type": "float", "unit": "mm", "required": false, "default": "thickness", "synonyms": ["bottom", "base thickness"] },
+        { "name": "dividers_height", "type": "float",  "unit": "mm", "required": false, "default": "height", "synonyms": ["divider height", "separator height"] },
+        { "name": "dividers_thickness", "type": "float", "unit": "mm", "required": false, "default": "thickness", "synonyms": ["divider thickness", "separator thickness"] }
+      ],
+      "intent_keywords": ["tray", "organizer", "organiser", "storage", "compartment", "divider", "box with dividers", "storage tray", "parts tray", "organiser tray", "organizer tray", "parts organizer", "parts organiser", "storage box", "divided box", "compartment box", "tool organizer", "tool organiser", "hardware organizer", "hardware organiser", "sorting box", "sorting tray"]
     }
+    
     
   ]
 }
