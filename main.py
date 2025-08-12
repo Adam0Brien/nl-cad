@@ -34,7 +34,7 @@ def main(description, output, test, speech, quick_speech):
         try:
             if quick_speech:
                 click.echo("🎤 Quick Speech Mode - Speak your CAD request:")
-                description = quick_speech_to_text(timeout=15.0)
+                description = quick_speech_to_text(timeout=30.0)
             else:
                 click.echo("🎤 Speech Mode - Speak your CAD request:")
                 description = speech_to_text_with_confirmation()

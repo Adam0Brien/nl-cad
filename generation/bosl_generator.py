@@ -90,11 +90,11 @@ class BOSLGenerator:
         # Try Ollama first with prompt files
         ollama_params = self._extract_params_with_ollama(description, component)
         if ollama_params:
-            print(f"Ollama extracted: {ollama_params}")
+            print(f"✅ Ollama extracted: {ollama_params}")
             return ollama_params
         
         # Fall back to regex-based extraction
-        print("Falling back to regex extraction")
+        print("⚠️  Falling back to regex extraction")
         description_lower = description.lower()
         params = {}
         
@@ -186,10 +186,6 @@ class BOSLGenerator:
                 "options": {"temperature": 0.0, "num_predict": num_predict}
             }
             
-            print(f"System prompt: {self.system_prompt}")
-            print(f"User prompt: {user_prompt}")
-            print(f"Payload: {payload}")
-            
             # Configurable timeouts: default 5s connect, 120s read
             connect_timeout = float(os.getenv("OLLAMA_CONNECT_TIMEOUT", "5"))
             read_timeout = float(os.getenv("OLLAMA_READ_TIMEOUT", "120"))
@@ -199,10 +195,6 @@ class BOSLGenerator:
                 timeout=(connect_timeout, read_timeout),
             )
             response.raise_for_status()
-            
-            print(f"Response status: {response.status_code}")
-            print(f"Response headers: {response.headers}")
-            print(f"Full response: {response.text}")
             
             content = response.json().get("message", {}).get("content", "")
             print(f"Ollama response content: {content}")

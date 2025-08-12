@@ -15,7 +15,7 @@ except ImportError:
 
 
 class SpeechRecognizer:
-    def __init__(self, timeout: float = 10.0, phrase_timeout: float = 3.0):
+    def __init__(self, timeout: float = 20.0, phrase_timeout: float = 20.0):
         """
         Initialize speech recognizer
         
@@ -48,31 +48,7 @@ class SpeechRecognizer:
             self.recognizer.energy_threshold = 50
             print("Proceeding with default settings...")
     
-    def _find_best_microphone(self):
-        """Try to find the best available microphone"""
-        try:
-            # Get list of microphones
-            mic_list = sr.Microphone.list_microphone_names()
-            print(f"Found {len(mic_list)} microphones")
-            
-            # Preferred microphone names (in order of preference)
-            preferred = ["ALC257 Analog", "pipewire", "default"]
-            
-            # Try to find a preferred microphone
-            for pref in preferred:
-                for i, name in enumerate(mic_list):
-                    if pref.lower() in name.lower():
-                        print(f"Using microphone: {name}")
-                        return sr.Microphone(device_index=i)
-            
-            # Fallback to default microphone
-            print("Using default microphone")
-            return sr.Microphone()
-            
-        except Exception as e:
-            print(f"Error finding microphone: {e}")
-            print("Using default microphone")
-            return sr.Microphone()
+
     
     def listen_once(self, prompt: str = "Speak your CAD request now:") -> Optional[str]:
         """
@@ -85,7 +61,7 @@ class SpeechRecognizer:
             Recognized text or None if recognition failed
         """
         print(f"\n🎤 {prompt}")
-        print("Listening... (speak within 10 seconds)")
+        print("Listening... (speak within 20 seconds)")
         
         try:
             with self.microphone as source:
@@ -185,7 +161,7 @@ class SpeechRecognizer:
 
 
 # Utility functions for easy integration
-def quick_speech_to_text(timeout: float = 15.0) -> Optional[str]:
+def quick_speech_to_text(timeout: float = 30.0) -> Optional[str]:
     """
     Quick one-shot speech recognition
     
