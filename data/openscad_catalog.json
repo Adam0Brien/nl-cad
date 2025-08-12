@@ -25,7 +25,7 @@
       "module": "sphere",
       "includes": [],
       "params": [
-        { "name": "r", "type": "float", "unit": "mm", "required": true, "synonyms": ["radius", "r="] }
+        { "name": "r", "type": "float", "unit": "mm", "required": true, "synonyms": ["radius","size", "r="] }
       ],
       "intent_keywords": ["sphere", "ball"]
     }

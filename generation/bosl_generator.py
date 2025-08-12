@@ -3,12 +3,13 @@ Simple BOSL Generator - Easy to understand and modify
 """
 import json
 import re
+import os
 from pathlib import Path
 from typing import Dict, List, Optional
 
 
 class BOSLGenerator:
-    def __init__(self, catalog_path: str = "data/bosl_catalog.json", 
+    def __init__(self, catalog_path: str = "data/openscad_catalog.json", 
                  system_prompt_path: str = "config/system_prompt.txt",
                  user_prompt_path: str = "config/user_prompt.txt"):
         """Initialize with the component catalog and prompt files"""
@@ -50,12 +51,24 @@ class BOSLGenerator:
         # Step 2: Extract parameters from the description
         params = self._extract_parameters(description, component)
         
+        # Step 2.5: Validate required params are present; if not, return a readable error
+        missing = self._missing_required_params(component, params)
+        if missing:
+            missing_list = ", ".join(missing)
+            return f"// Error: Missing required parameter(s) for {component['id']}: {missing_list}. Please include these in your request."
+        
         # Step 3: Generate the OpenSCAD code
         return self._generate_code(component, params)
     
     def _find_component(self, description: str) -> Optional[str]:
         """Find which component matches the description"""
         description_lower = description.lower()
+        
+        # If text clearly indicates threading, strongly bias threaded rod
+        if any(k in description_lower for k in ["threaded", "thread", "lead screw", "leadscrew", "acme", "trapezoidal"]):
+            if "rod" in description_lower or "screw" in description_lower or "acme" in description_lower:
+                if "trapezoidal_threaded_rod" in self.components:
+                    return "trapezoidal_threaded_rod"
         
         # Score each component based on keyword matches
         best_match = None
@@ -154,22 +167,38 @@ class BOSLGenerator:
             component_list = ", ".join([comp['id'] for comp in self.components.values()])
             user_prompt = self.user_prompt.replace("{description}", description).replace("{component_list}", component_list)
             
+            # Resolve Ollama configuration from environment
+            model = os.getenv("OLLAMA_MODEL", "mistral:7b-instruct")
+            base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+            try:
+                num_predict = int(os.getenv("OLLAMA_NUM_PREDICT", "128"))
+            except ValueError:
+                num_predict = 128
+            
             # Call Ollama
             payload = {
-                "model": "mistral:7b-instruct",  # Better instruction following model
+                "model": model,  # Configurable instruction model
+                "format": "json",  # Ask model to return strict JSON
                 "messages": [
                     {"role": "system", "content": self.system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
                 "stream": False,
-                "options": {"temperature": 0.0}
+                "options": {"temperature": 0.0, "num_predict": num_predict}
             }
             
             print(f"System prompt: {self.system_prompt}")
             print(f"User prompt: {user_prompt}")
             print(f"Payload: {payload}")
             
-            response = requests.post("http://localhost:11434/api/chat", json=payload, timeout=10)
+            # Configurable timeouts: default 5s connect, 120s read
+            connect_timeout = float(os.getenv("OLLAMA_CONNECT_TIMEOUT", "5"))
+            read_timeout = float(os.getenv("OLLAMA_READ_TIMEOUT", "120"))
+            response = requests.post(
+                f"{base_url}/api/chat",
+                json=payload,
+                timeout=(connect_timeout, read_timeout),
+            )
             response.raise_for_status()
             
             print(f"Response status: {response.status_code}")
@@ -183,14 +212,15 @@ class BOSLGenerator:
             import json
             import re
             
-            # First, try to clean the content by removing comments and fixing common issues
+            # First, try to clean the content (remove comments, trailing commas, trim)
             cleaned_content = self._clean_json_content(content)
             print(f"Cleaned content: {cleaned_content}")
             
             # Try direct parsing of cleaned content
             try:
                 params = json.loads(cleaned_content.strip())
-                if 'component_id' in params:
+                params = self._normalize_ai_params(component, params)
+                if 'component_id' in params and self._validate_ai_params(component, params):
                     return params
             except json.JSONDecodeError:
                 pass
@@ -203,9 +233,10 @@ class BOSLGenerator:
                     # Clean the raw JSON as well
                     cleaned_raw_json = self._clean_json_content(raw_json)
                     params = json.loads(cleaned_raw_json)
+                    params = self._normalize_ai_params(component, params)
                     
                     # Handle different response formats
-                    if 'component_id' in params:
+                    if 'component_id' in params and self._validate_ai_params(component, params):
                         # Standard format: {"component_id": "cuboid", "size": [25,25,25]}
                         return params
                     elif any(comp in params for comp in ['cuboid', 'metric_bolt', 'metric_nut', 'washer', 'cyl']):
@@ -214,7 +245,11 @@ class BOSLGenerator:
                         component_name = list(params.keys())[0]
                         component_params = params[component_name]
                         component_params['component_id'] = component_name
-                        return component_params
+                        if self._validate_ai_params(component, component_params):
+                            return component_params
+                        else:
+                            print("AI params failed validation; will fallback")
+                            return {}
                     else:
                         print(f"Unexpected JSON format: {params}")
                         return {}
@@ -231,6 +266,33 @@ class BOSLGenerator:
             traceback.print_exc()
         
         return {}
+
+    def _normalize_ai_params(self, component: Dict, params: Dict) -> Dict:
+        """Normalize AI-returned keys to expected catalog param names and inject safe defaults when needed."""
+        if not isinstance(params, dict):
+            return {}
+        normalized = dict(params)
+        # If nested with component_id present but mismatched, keep as-is; we'll validate later
+        # Map common alternative keys to expected names using catalog synonyms
+        expected_params = {p['name']: p for p in component.get('params', [])}
+        for expected_name, pdef in expected_params.items():
+            if expected_name in normalized:
+                continue
+            # Check synonyms as keys
+            for syn in pdef.get('synonyms', []):
+                if syn in normalized:
+                    normalized[expected_name] = normalized.pop(syn)
+                    break
+        # Special-case: map common aliases to 'd' if the component expects 'd'
+        if 'd' in expected_params:
+            for alias in ['diameter', 'outer_diameter', 'diameter_outer', 'od']:
+                if alias in normalized and 'd' not in normalized:
+                    normalized['d'] = normalized.pop(alias)
+        # Enforce no guessing for strict required params such as pitch
+        if component.get('id') == 'trapezoidal_threaded_rod':
+            # If pitch isn't explicitly present, do not add it here; validation will fail and instruct the user
+            pass
+        return normalized
     
     def _clean_json_content(self, content: str) -> str:
         """Clean JSON content by removing comments and fixing common issues"""
@@ -251,6 +313,38 @@ class BOSLGenerator:
             content = content[first_brace:]
         
         return content.strip()
+
+    def _validate_ai_params(self, component: Dict, params: Dict) -> bool:
+        """Ensure AI returned required params with numeric/boolean literals only."""
+        try:
+            if params.get("component_id") != component.get("id"):
+                # Allow if component id is present in params and matches or skip if not enforceable
+                pass
+            for param in component.get('params', []):
+                name = param['name']
+                ptype = param.get('type', 'float')
+                required = param.get('required', False)
+                if required and name not in params:
+                    print(f"AI missing required param: {name}")
+                    return False
+                if name in params:
+                    val = params[name]
+                    if ptype in ('float', 'int'):
+                        if not isinstance(val, (int, float)):
+                            print(f"AI param {name} not numeric: {val}")
+                            return False
+                    elif ptype == 'bool':
+                        if not isinstance(val, bool):
+                            print(f"AI param {name} not boolean: {val}")
+                            return False
+                    elif ptype == 'float[]':
+                        if not isinstance(val, list) or not all(isinstance(x, (int, float)) for x in val):
+                            print(f"AI param {name} not number array: {val}")
+                            return False
+            return True
+        except Exception as e:
+            print(f"AI param validation error: {e}")
+            return False
     
     def _find_number_with_unit(self, text: str, param: Dict) -> Optional[float]:
         """Find a number with its unit and convert to mm"""
@@ -266,24 +360,25 @@ class BOSLGenerator:
                 unit = match.group(2)
                 return self._convert_to_mm(number, unit)
             
+            # Also support: "10mm synonym" (e.g., "50mm long")
+            pattern_rev = rf"(\d+(?:\.\d+)?)\s*(mm|cm|m|in|inch|inches|\")\s*{re.escape(synonym)}\b"
+            match_rev = re.search(pattern_rev, text)
+            if match_rev:
+                number = float(match_rev.group(1))
+                unit = match_rev.group(2)
+                return self._convert_to_mm(number, unit)
+            
             # Pattern: "M6" for metric bolts
             if synonym == 'size':
                 m_match = re.search(r"\bm\s*(\d{1,3})\b", text)
                 if m_match:
                     return float(m_match.group(1))
             
-            # Pattern: "x 25" for length
+            # Pattern: "x 25" for length (bolt notation)
             if synonym == 'l':
                 x_match = re.search(r"\bx\s*(\d+(?:\.\d+)?)\b", text)
                 if x_match:
                     return float(x_match.group(1))
-        
-        # Look for any number with unit as fallback
-        match = re.search(r"(\d+(?:\.\d+)?)\s*(mm|cm|m|in|inch|inches|\")", text)
-        if match:
-            number = float(match.group(1))
-            unit = match.group(2)
-            return self._convert_to_mm(number, unit)
         
         return None
     
@@ -397,6 +492,14 @@ class BOSLGenerator:
             lines.append(f"{module_name}();")
         
         return "\n".join(lines)
+
+    def _missing_required_params(self, component: Dict, params: Dict) -> List[str]:
+        """Return list of required parameter names missing from params."""
+        missing: List[str] = []
+        for p in component.get('params', []):
+            if p.get('required', False) and p['name'] not in params:
+                missing.append(p['name'])
+        return missing
 
 
 # Simple usage example

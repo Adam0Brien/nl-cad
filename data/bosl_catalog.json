@@ -39,8 +39,33 @@
         { "name": "l", "type": "float", "unit": "mm", "required": true, "synonyms": ["length", "l", "h", "long"] },
         { "name": "d", "type": "float", "unit": "mm", "required": true, "synonyms": ["diameter", "d", "od"] }
       ],
-      "intent_keywords": ["cyl", "cylinder", "rod", "tube", "pipe"]
+      "intent_keywords": ["cyl", "cylinder", "tube", "pipe"]
+    },
+    {
+      "id": "trapezoidal_threaded_rod",
+      "includes": ["BOSL/constants.scad", "BOSL/threading.scad"],
+      "module": "trapezoidal_threaded_rod",
+      "params": [
+        { "name": "d",             "type": "float", "unit": "mm",      "required": true,  "synonyms": ["diameter", "d", "od", "width"] },
+        { "name": "l",             "type": "float", "unit": "mm",      "required": true,  "synonyms": ["length", "l", "long"] },
+        { "name": "pitch",         "type": "float", "unit": "mm",      "required": true,  "synonyms": ["pitch", "lead", "thread pitch"] },
+        { "name": "thread_depth",  "type": "float", "unit": "mm",      "required": false, "default": "pitch/2", "synonyms": ["depth", "thread depth"] },
+        { "name": "thread_angle",  "type": "float", "unit": "degree",  "required": false, "default": 14.5,      "synonyms": ["angle", "pressure angle", "profile angle"] }
+      ],
+      "intent_keywords": [
+        "threaded rod",
+        "threaded-rod",
+        "trapezoidal",
+        "acme",
+        "acme rod",
+        "lead screw",
+        "leadscrew",
+        "square thread",
+        "screw rod",
+        "thread"
+      ]
     }
+    
   ]
 }
 
