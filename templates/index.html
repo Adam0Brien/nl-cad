@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NL-CAD - Natural Language CAD Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            height: 100vh;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .control-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+        }
+
+        .viewer-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        h1 {
+            color: #4a5568;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f7fafc;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #edf2f7;
+            border-color: #cbd5e0;
+        }
+
+        .btn-voice {
+            background: linear-gradient(135deg, #38a169, #48bb78);
+            color: white;
+        }
+
+        .btn-voice:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(56, 161, 105, 0.4);
+        }
+
+        .btn-voice.recording {
+            background: linear-gradient(135deg, #e53e3e, #fc8181);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #d69e2e, #ed8936);
+            color: white;
+        }
+
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(214, 158, 46, 0.4);
+        }
+
+        .btn-download:disabled {
+            background: #e2e8f0;
+            color: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .status.success {
+            background: #f0fff4;
+            color: #38a169;
+            border: 1px solid #9ae6b4;
+        }
+
+        .status.error {
+            background: #fed7d7;
+            color: #e53e3e;
+            border: 1px solid #feb2b2;
+        }
+
+        .status.info {
+            background: #ebf8ff;
+            color: #3182ce;
+            border: 1px solid #90cdf4;
+        }
+
+        .code-preview {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            display: none;
+        }
+
+        #viewer {
+            width: 100%;
+            height: 100%;
+            border-radius: 15px;
+        }
+
+        .viewer-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #a0aec0;
+            font-size: 18px;
+            z-index: 10;
+        }
+
+        .model-info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
+                height: auto;
+                min-height: 100vh;
+            }
+            
+            .control-panel {
+                order: 1;
+            }
+            
+            .viewer-panel {
+                order: 2;
+                min-height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="control-panel">
+            <h1>🎤 NL-CAD Generator</h1>
+            
+            <div class="input-section">
+                <div class="input-group">
+                    <label for="description">Describe what you want to create:</label>
+                    <textarea 
+                        id="description" 
+                        placeholder="Example: M8 bolt 25mm long, or cylinder 40mm long 25mm diameter, or gear 20 teeth 5mm pitch..."
+                    ></textarea>
+                </div>
+                
+                <div class="button-group">
+                    <button id="voiceBtn" class="btn-voice">
+                        🎤 Voice Input
+                    </button>
+                    <button id="generateBtn" class="btn-primary">
+                        🔧 Generate
+                    </button>
+                </div>
+            </div>
+
+            <div id="status" class="status"></div>
+
+            <div class="input-group">
+                <button id="downloadBtn" class="btn-download" disabled>
+                    💾 Download STL
+                </button>
+            </div>
+
+            <div id="codePreview" class="code-preview"></div>
+        </div>
+
+        <div class="viewer-panel">
+            <div id="viewer"></div>
+            <div class="viewer-overlay" id="viewerOverlay">
+                🎯 Generate a model to see it here
+            </div>
+            <div class="model-info" id="modelInfo"></div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let scene, camera, renderer, controls;
+        let currentModel = null;
+        let currentSTLData = null;
+        let recognition = null;
+        let isRecording = false;
+
+        // Initialize Three.js scene
+        function initViewer() {
+            try {
+                const viewer = document.getElementById('viewer');
+                
+                // Scene setup
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0xf7fafc);
+                
+                // Camera setup
+                camera = new THREE.PerspectiveCamera(75, viewer.clientWidth / viewer.clientHeight, 0.1, 1000);
+                camera.position.set(50, 50, 50);
+                
+                // Renderer setup
+                renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(viewer.clientWidth, viewer.clientHeight);
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                viewer.appendChild(renderer.domElement);
+                
+                console.log('✅ Three.js viewer initialized successfully');
+            
+            // Controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(50, 50, 50);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+            
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize);
+            
+            // Start render loop
+            animate();
+            } catch (error) {
+                console.error('❌ Three.js initialization failed:', error);
+                // Fallback: hide the viewer and show error message
+                document.getElementById('viewer').innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">3D viewer unavailable</div>';
+            }
+        }
+
+        function onWindowResize() {
+            const viewer = document.getElementById('viewer');
+            camera.aspect = viewer.clientWidth / viewer.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(viewer.clientWidth, viewer.clientHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Speech Recognition Setup
+        function initSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+                
+                recognition.onstart = function() {
+                    isRecording = true;
+                    updateVoiceButton();
+                    showStatus('Listening... Speak now!', 'info');
+                };
+                
+                recognition.onresult = function(event) {
+                    const transcript = event.results[0][0].transcript;
+                    document.getElementById('description').value = transcript;
+                    showStatus(`Heard: "${transcript}"`, 'success');
+                };
+                
+                recognition.onerror = function(event) {
+                    showStatus(`Speech recognition error: ${event.error}`, 'error');
+                    isRecording = false;
+                    updateVoiceButton();
+                };
+                
+                recognition.onend = function() {
+                    isRecording = false;
+                    updateVoiceButton();
+                };
+            } else {
+                document.getElementById('voiceBtn').disabled = true;
+                document.getElementById('voiceBtn').textContent = '🚫 Not Supported';
+            }
+        }
+
+        function updateVoiceButton() {
+            const btn = document.getElementById('voiceBtn');
+            if (isRecording) {
+                btn.textContent = '🔴 Recording...';
+                btn.classList.add('recording');
+            } else {
+                btn.textContent = '🎤 Voice Input';
+                btn.classList.remove('recording');
+            }
+        }
+
+        // API Functions
+        async function generateModel() {
+            console.log('🔧 Generate function called!');
+            
+            const description = document.getElementById('description').value.trim();
+            if (!description) {
+                showStatus('Please enter a description', 'error');
+                return;
+            }
+
+            const generateBtn = document.getElementById('generateBtn');
+            const originalText = generateBtn.innerHTML;
+            generateBtn.innerHTML = '⏳ Generating...';
+            generateBtn.disabled = true;
+            
+            showStatus('Starting generation...', 'info');
+
+            try {
+                // Generate OpenSCAD code
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ description })
+                });
+
+                const data = await response.json();
+                if (!data.success) {
+                    throw new Error(data.error);
+                }
+
+                // Show generated code
+                showCode(data.scad_code);
+                showStatus('OpenSCAD code generated! Converting to STL...', 'info');
+
+                // Generate STL
+                const stlResponse = await fetch('/api/generate_stl', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        scad_code: data.scad_code,
+                        filename: `model_${Date.now()}`
+                    })
+                });
+
+                const stlData = await stlResponse.json();
+                if (!stlData.success) {
+                    throw new Error(stlData.error);
+                }
+
+                currentSTLData = stlData;
+                loadSTLFromFile(stlData.path);
+                document.getElementById('downloadBtn').disabled = false;
+                
+                showStatus(`✅ Model generated successfully! (${(stlData.size / 1024).toFixed(1)} KB)`, 'success');
+
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            } finally {
+                generateBtn.innerHTML = originalText;
+                generateBtn.disabled = false;
+            }
+        }
+
+        async function downloadSTL() {
+            if (!currentSTLData) return;
+            
+            try {
+                const response = await fetch(`/api/download_stl/${currentSTLData.filename}`);
+                if (!response.ok) throw new Error('Download failed');
+                
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = currentSTLData.filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                showStatus('STL downloaded successfully!', 'success');
+            } catch (error) {
+                showStatus(`Download error: ${error.message}`, 'error');
+            }
+        }
+
+        // UI Helper Functions
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    status.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function showCode(code) {
+            const preview = document.getElementById('codePreview');
+            preview.textContent = code;
+            preview.style.display = 'block';
+        }
+
+        function loadSTLFromFile(filepath) {
+            if (!currentSTLData) {
+                console.error('No STL data available');
+                return;
+            }
+            
+            document.getElementById('viewerOverlay').style.display = 'none';
+            document.getElementById('modelInfo').style.display = 'block';
+            document.getElementById('modelInfo').textContent = `Model: ${currentSTLData?.filename || 'Generated Model'}`;
+            
+            // Check if STLLoader is available
+            if (typeof THREE.STLLoader === 'undefined') {
+                console.error('STLLoader not available, using demo geometry');
+                showStatus('STL Loader not available - showing demo model', 'error');
+                loadDemoGeometry();
+                return;
+            }
+            
+            // Load the actual STL file
+            const loader = new THREE.STLLoader();
+            const stlUrl = `/api/download_stl/${currentSTLData.filename}`;
+            
+            console.log('Loading STL from:', stlUrl);
+            showStatus('Loading 3D model...', 'info');
+            
+            loader.load(stlUrl, function(geometry) {
+                console.log('STL loaded successfully, vertices:', geometry.attributes.position.count);
+                loadSTLGeometry(geometry);
+                showStatus('3D model loaded successfully!', 'success');
+            }, function(progress) {
+                console.log('Loading progress:', progress);
+            }, function(error) {
+                console.error('Error loading STL:', error);
+                showStatus(`Error loading 3D model: ${error.message}`, 'error');
+                // Fallback to demo geometry but make it obvious
+                loadDemoGeometry();
+            });
+        }
+
+        function loadSTLGeometry(geometry) {
+            // Clear previous model
+            if (currentModel) {
+                scene.remove(currentModel);
+            }
+            
+            // Center the geometry
+            geometry.center();
+            geometry.computeVertexNormals();
+            
+            // Create material
+            const material = new THREE.MeshLambertMaterial({ 
+                color: 0x667eea,
+                transparent: true,
+                opacity: 0.9
+            });
+            
+            // Create mesh
+            currentModel = new THREE.Mesh(geometry, material);
+            currentModel.castShadow = true;
+            currentModel.receiveShadow = true;
+            scene.add(currentModel);
+            
+            // Auto-fit camera to model
+            fitCameraToModel();
+        }
+
+        function loadDemoGeometry() {
+            // Clear previous model
+            if (currentModel) {
+                scene.remove(currentModel);
+            }
+            
+            // Create a demo cube geometry as fallback - make it OBVIOUSLY different
+            const geometry = new THREE.BoxGeometry(20, 20, 20);
+            const material = new THREE.MeshLambertMaterial({ 
+                color: 0xff4444,  // Bright red to indicate this is a fallback
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            currentModel = new THREE.Mesh(geometry, material);
+            currentModel.castShadow = true;
+            currentModel.receiveShadow = true;
+            scene.add(currentModel);
+            
+            fitCameraToModel();
+            
+            // Show clear indication this is fallback
+            console.log('Showing fallback demo geometry (red cube)');
+        }
+
+        function fitCameraToModel() {
+            if (!currentModel) return;
+            
+            // Get model bounds
+            const box = new THREE.Box3().setFromObject(currentModel);
+            const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
+            
+            // Calculate optimal camera distance
+            const maxSize = Math.max(size.x, size.y, size.z);
+            const distance = maxSize * 2;
+            
+            // Position camera
+            controls.target.copy(center);
+            camera.position.set(
+                center.x + distance * 0.7,
+                center.y + distance * 0.7,
+                center.z + distance * 0.7
+            );
+            
+            controls.update();
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            initViewer();
+            initSpeechRecognition();
+            
+            document.getElementById('voiceBtn').addEventListener('click', function() {
+                if (recognition && !isRecording) {
+                    recognition.start();
+                }
+            });
+            
+            const generateBtn = document.getElementById('generateBtn');
+            if (generateBtn) {
+                generateBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('🔧 Generate button clicked!');
+                    generateModel();
+                });
+                console.log('✅ Generate button event listener attached');
+            } else {
+                console.error('❌ Generate button not found!');
+            }
+            document.getElementById('downloadBtn').addEventListener('click', downloadSTL);
+            
+            // Allow Enter to generate
+            document.getElementById('description').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                    generateModel();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
