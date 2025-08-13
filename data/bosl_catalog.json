@@ -39,7 +39,7 @@
         { "name": "l", "type": "float", "unit": "mm", "required": true, "synonyms": ["length", "l", "h", "long"] },
         { "name": "d", "type": "float", "unit": "mm", "required": true, "synonyms": ["diameter", "d", "od"] }
       ],
-      "intent_keywords": ["cyl", "cylinder", "tube", "pipe"]
+      "intent_keywords": ["cyl", "cylinder", "pipe"]
     },
     {
       "id": "trapezoidal_threaded_rod",
@@ -101,7 +101,84 @@
         { "name": "dividers_thickness", "type": "float", "unit": "mm", "required": false, "default": "thickness", "synonyms": ["divider thickness", "separator thickness"] }
       ],
       "intent_keywords": ["tray", "organizer", "organiser", "storage", "compartment", "divider", "box with dividers", "storage tray", "parts tray", "organiser tray", "organizer tray", "parts organizer", "parts organiser", "storage box", "divided box", "compartment box", "tool organizer", "tool organiser", "hardware organizer", "hardware organiser", "sorting box", "sorting tray"]
+    },
+    {
+      "id": "slider",
+      "includes": ["BOSL2/std.scad", "BOSL2/sliders.scad"],
+      "module": "slider",
+      "params": [
+        { "name": "l", "type": "float", "unit": "mm", "required": true, "synonyms": ["length","l","long","height","h"] },
+        { "name": "base", "type": "float", "unit": "mm", "required": true, "synonyms": ["base","base width","inner width","slot width"] },
+        { "name": "wall", "type": "float", "unit": "mm", "required": true, "default": 4, "synonyms": ["wall","wall thickness","thickness"] }
+      ],
+      "intent_keywords": ["slider","linear slider","u-channel","slide block","carriage"]
+    },
+    {
+      "id": "rail",
+      "includes": ["BOSL2/std.scad", "BOSL2/sliders.scad"],
+      "module": "rail",
+      "params": [
+        { "name": "l", "type": "float", "unit": "mm", "required": true, "synonyms": ["length","l","long","height","h"] },
+        { "name": "w", "type": "float", "unit": "mm", "required": true, "synonyms": ["width","w","rail width","bar width"] },
+        { "name": "h", "type": "float", "unit": "mm", "required": true, "synonyms": ["height","h","rail height","bar height"] }
+      ],
+      "intent_keywords": ["rail","slide rail","linear rail","track"]
+    },
+    {
+      "id": "tube",
+      "includes": ["BOSL2/std.scad"],
+      "module": "tube",
+      "params": [
+        { "name": "h", "type": "float", "unit": "mm", "required": true, "synonyms": ["height","h","length","l"] },
+        { "name": "od", "type": "float", "unit": "mm", "required": true, "synonyms": ["outer diameter","od","outer_diameter"] },
+        { "name": "id", "type": "float", "unit": "mm", "required": false, "default": "od-2", "synonyms": ["inner diameter","id","bore","inner_diameter"] }
+      ],
+      "intent_keywords": ["tube","pipe","spacer","bushing","ring"]
+    },
+    {
+      "id": "rect_tube",
+      "includes": ["BOSL2/std.scad"],
+      "module": "rect_tube",
+      "params": [
+        { "name": "size", "type": "float[]", "unit": "mm", "required": true, "synonyms": ["size","dimensions","length width height","lwh"] },
+        { "name": "wall", "type": "float", "unit": "mm", "required": true, "synonyms": ["wall","wall thickness","thickness"] },
+        { "name": "h", "type": "float", "unit": "mm", "required": false, "default": "size[2]", "synonyms": ["height","h"] }
+      ],
+      "intent_keywords": ["rectangular tube","hollow box","beam","frame"]
+    },
+    {
+      "id": "wedge",
+      "includes": ["BOSL2/std.scad"],
+      "module": "wedge",
+      "params": [
+        { "name": "size1", "type": "float[]", "unit": "mm", "required": true, "synonyms": ["size1","base1","side1"] },
+        { "name": "size2", "type": "float[]", "unit": "mm", "required": true, "synonyms": ["size2","base2","side2"] },
+        { "name": "h", "type": "float", "unit": "mm", "required": true, "synonyms": ["height","h"] }
+      ],
+      "intent_keywords": ["wedge","triangular prism","ramp"]
+    },
+    {
+      "id": "pyramid",
+      "includes": ["BOSL2/std.scad"],
+      "module": "pyramid",
+      "params": [
+        { "name": "size", "type": "float[]", "unit": "mm", "required": true, "synonyms": ["size","dimensions","length width","base size"] },
+        { "name": "h", "type": "float", "unit": "mm", "required": true, "synonyms": ["height","h"] }
+      ],
+      "intent_keywords": ["pyramid","tapered block","cone frustum"]
+    },
+    {
+      "id": "rack",
+      "includes": ["BOSL/constants.scad", "BOSL/involute_gears.scad"],
+      "module": "rack",
+      "params": [
+        { "name": "mm_per_tooth", "type": "float", "unit": "mm", "required": true, "synonyms": ["circular pitch","mm per tooth","cp"] },
+        { "name": "number_of_teeth", "type": "int", "unit": "", "required": true, "synonyms": ["teeth","tooth_count","z"] },
+        { "name": "thickness", "type": "float", "unit": "mm", "required": true, "synonyms": ["thickness","height"] }
+      ],
+      "intent_keywords": ["gear rack","rack","linear gear"]
     }
+    
     
     
   ]
