@@ -453,12 +453,9 @@ class BOSLGenerator:
         """Generate the final OpenSCAD code"""
         lines = []
         
-        # Add include/use statements
+        # Add include statements
         for include in component.get('includes', []):
-            if 'constants.scad' in include:
-                lines.append(f"include <{include}>")
-            else:
-                lines.append(f"use <{include}>")
+            lines.append(f"include <{include}>")
         
         # Build parameter string
         param_parts = []

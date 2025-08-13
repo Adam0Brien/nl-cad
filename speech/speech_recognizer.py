@@ -15,7 +15,7 @@ except ImportError:
 
 
 class SpeechRecognizer:
-    def __init__(self, timeout: float = 20.0, phrase_timeout: float = 20.0):
+    def __init__(self, timeout: float = 20.0, phrase_timeout: float = 15.0):
         """
         Initialize speech recognizer
         
