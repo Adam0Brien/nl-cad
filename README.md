@@ -79,8 +79,14 @@ Hackathon/
 │   ├── bosl_catalog.json     # BOSL component definitions
 │   └── openscad_catalog.json # Basic OpenSCAD primitives
 ├── config/
-│   ├── system_prompt.txt     # AI system instructions
-│   └── user_prompt.txt       # AI user instructions
+│   ├── creative/             # Creative AI generation prompts
+│   │   ├── system_prompt.txt # Spatial reasoning & OpenSCAD rules
+│   │   └── user_prompt.txt   # Creative generation instructions
+│   ├── catalog/              # Catalog-based generation prompts
+│   │   ├── system_prompt.txt # Parameter extraction rules
+│   │   └── user_prompt.txt   # Catalog matching instructions
+│   ├── system_prompt.txt     # BOSL generation instructions
+│   └── user_prompt.txt       # BOSL user prompts
 ├── output/                   # Generated .scad files
 ```
 
@@ -92,5 +98,8 @@ python3 main.py --test
 
 **For Developers:**
 - **Adding Components**: Edit `data/bosl_catalog.json`
-- **Adjusting AI Behavior**: Modify `config/system_prompt.txt` and `config/user_prompt.txt`
+- **Adjusting AI Behavior**: 
+  - Creative generation: Modify `config/creative/system_prompt.txt` and `config/creative/user_prompt.txt`
+  - Catalog generation: Modify `config/catalog/system_prompt.txt` and `config/catalog/user_prompt.txt`
+  - BOSL generation: Modify `config/system_prompt.txt` and `config/user_prompt.txt`
 - **Extending Logic**: Modify `generation/bosl_generator.py`
