@@ -1,0 +1,35 @@
+Convert this design specification into clean, working OpenSCAD code:
+
+{design_specification}
+
+CRITICAL: You must define ALL variables with actual numeric values at the top. Do not write comments instead of variable definitions.
+
+Requirements:
+- Start with actual variable definitions (name = number;)
+- Every dimension mentioned must have a corresponding variable
+- Use proper OpenSCAD syntax throughout
+- Include clear comments explaining each section
+- Ensure the code will run without "undefined variable" errors
+- Use descriptive variable names
+
+Example of WRONG approach:
+```
+// Dimensions  ← This is just a comment!
+// Base        ← This is just a comment!
+// Width       ← This is just a comment!
+cube([base_width, base_height, base_depth]); ← ERROR: undefined variables
+```
+
+Example of CORRECT approach:
+```
+// Table dimensions
+base_width = 120;
+base_height = 75;
+base_depth = 60;
+leg_thickness = 5;
+
+// Main construction
+cube([base_width, base_height, base_depth]);
+```
+
+Generate ONLY the complete OpenSCAD code with proper variable definitions.

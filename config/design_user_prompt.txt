@@ -1,0 +1,5 @@
+Please create a detailed design specification for: {description}
+
+Consider the object's purpose, functionality, and how someone would actually use it. Think about dimensions, materials, and construction methods.
+
+Provide a clear breakdown of components, measurements, and how they fit together.

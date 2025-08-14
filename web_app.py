@@ -2,6 +2,7 @@
 """
 Web UI for NL-CAD - Natural Language CAD Generator
 Provides a web interface with voice recognition and 3D STL rendering
+Supports multiple generator modes: BOSL, Cube-only, and Maze
 """
 import os
 import tempfile
@@ -9,12 +10,22 @@ import subprocess
 from pathlib import Path
 from flask import Flask, request, jsonify, render_template, send_file
 from generation.bosl_generator import BOSLGenerator
+from generation.cube_generator import CubeGenerator
+from generation.maze_generator import MazeGenerator
+from conversation.conversation_manager import ConversationManager
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
-# Initialize BOSL generator
-generator = BOSLGenerator()
+# Initialize generators
+generators = {
+    'bosl': BOSLGenerator(),
+    'cube': CubeGenerator(),
+    'maze': MazeGenerator()
+}
+
+# Global conversational session storage (in production, use Redis or database)
+conversation_sessions = {}
 
 @app.route('/')
 def index():
@@ -26,15 +37,59 @@ def test():
     """Serve the test page for debugging"""
     return render_template('test.html')
 
+@app.route('/conversation')
+def conversation():
+    """Serve the conversational design interface"""
+    return render_template('conversation.html')
+
+@app.route('/api/modes')
+def get_modes():
+    """Get available generator modes"""
+    return jsonify({
+        'modes': [
+            {
+                'id': 'bosl',
+                'name': 'BOSL Generator',
+                'description': 'Mechanical parts using BOSL2 library (bolts, nuts, washers, etc.)',
+                'icon': '🔧'
+            },
+            {
+                'id': 'cube',
+                'name': 'Cube Generator', 
+                'description': 'Voxel-style objects using only cubes (Minecraft-like)',
+                'icon': '🧊'
+            },
+            {
+                'id': 'maze',
+                'name': 'Maze Generator',
+                'description': 'Mazes with walls and paths (rectangular, circular, multi-level)',
+                'icon': '🌀'
+            },
+            {
+                'id': 'conversation',
+                'name': 'Conversational Design',
+                'description': 'Interactive design with questions and iterative examples',
+                'icon': '💬'
+            }
+        ]
+    })
+
 @app.route('/api/generate', methods=['POST'])
 def generate_scad():
-    """Generate OpenSCAD code from description"""
+    """Generate OpenSCAD code from description using specified generator mode"""
     try:
         data = request.get_json()
         description = data.get('description', '').strip()
+        mode = data.get('mode', 'bosl').lower()
         
         if not description:
             return jsonify({'error': 'No description provided'}), 400
+        
+        if mode not in generators:
+            return jsonify({'error': f'Invalid mode: {mode}. Valid modes: {list(generators.keys())}'}), 400
+        
+        # Select appropriate generator
+        generator = generators[mode]
         
         # Generate OpenSCAD code
         scad_code = generator.generate(description)
@@ -42,7 +97,8 @@ def generate_scad():
         return jsonify({
             'success': True,
             'scad_code': scad_code,
-            'description': description
+            'description': description,
+            'mode': mode
         })
         
     except Exception as e:
@@ -124,6 +180,107 @@ def download_stl(filename):
             download_name=filename,
             mimetype='application/octet-stream'
         )
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/conversation/start', methods=['POST'])
+def start_conversation():
+    """Start a new conversational design session"""
+    try:
+        data = request.get_json()
+        description = data.get('description', '').strip()
+        session_id = data.get('session_id', f"session_{len(conversation_sessions)}")
+        
+        if not description:
+            return jsonify({'error': 'No description provided'}), 400
+        
+        # Create new conversation manager
+        conversation_manager = ConversationManager()
+        conversation_sessions[session_id] = conversation_manager
+        
+        # Start the conversation
+        response = conversation_manager.start_conversation(description)
+        response['session_id'] = session_id
+        
+        return jsonify(response)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/conversation/continue', methods=['POST'])
+def continue_conversation():
+    """Continue an existing conversational design session"""
+    try:
+        data = request.get_json()
+        session_id = data.get('session_id', '')
+        user_input = data.get('user_input', '').strip()
+        
+        if not session_id or session_id not in conversation_sessions:
+            return jsonify({'error': 'Invalid or expired session'}), 400
+        
+        if not user_input:
+            return jsonify({'error': 'No user input provided'}), 400
+        
+        conversation_manager = conversation_sessions[session_id]
+        response = conversation_manager.continue_conversation(user_input)
+        response['session_id'] = session_id
+        
+        return jsonify(response)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/conversation/history/<session_id>')
+def get_conversation_history(session_id):
+    """Get the full conversation history for a session"""
+    try:
+        if session_id not in conversation_sessions:
+            return jsonify({'error': 'Session not found'}), 404
+        
+        conversation_manager = conversation_sessions[session_id]
+        history = conversation_manager.get_conversation_history()
+        
+        return jsonify({
+            'session_id': session_id,
+            'history': history
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/conversation/export/<session_id>')
+def export_conversation_design(session_id):
+    """Export the final design from a conversation session"""
+    try:
+        if session_id not in conversation_sessions:
+            return jsonify({'error': 'Session not found'}), 404
+        
+        conversation_manager = conversation_sessions[session_id]
+        code = conversation_manager.get_current_code()
+        
+        return jsonify({
+            'session_id': session_id,
+            'code': code
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/conversation/reset/<session_id>', methods=['POST'])
+def reset_conversation(session_id):
+    """Reset a conversation session to start fresh"""
+    try:
+        if session_id not in conversation_sessions:
+            return jsonify({'error': 'Session not found'}), 404
+        
+        conversation_manager = conversation_sessions[session_id]
+        conversation_manager.reset_conversation()
+        
+        return jsonify({
+            'message': 'Conversation reset successfully',
+            'session_id': session_id
+        })
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500

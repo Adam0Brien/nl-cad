@@ -1,0 +1,23 @@
+Create a maze design for: {description}
+
+Requirements:
+- Generate OpenSCAD code for a complete maze
+- Include boundary walls and internal walls
+- Create clear paths for navigation
+- Add start and end points (openings in boundary)
+- Make it challenging but solvable
+- Use standard dimensions (wall height: 20, thickness: 2, path width: 10)
+
+Maze specifications from description:
+- Size: Extract or default to 10x10 cells
+- Type: rectangular, circular, or multi-level as specified
+- Difficulty: beginner, intermediate, or advanced
+- Special features: rooms, dead ends, multiple levels, decorative elements
+
+Additional considerations:
+- Ensure there's at least one solution path
+- Add visual interest with varying wall heights or decorative elements
+- Consider adding a base platform
+- Include comments explaining the maze layout
+
+Return complete OpenSCAD code for the maze.
