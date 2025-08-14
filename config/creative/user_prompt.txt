@@ -1,0 +1,18 @@
+Generate OpenSCAD code for: "{description}"
+
+CRITICAL: Return ONLY OpenSCAD code. NO English text ANYWHERE.
+
+FORBIDDEN:
+- "Here is the code..."
+- "This creates a..."
+- Any English explanations
+- Markdown blocks
+- Text before or after code
+
+ONLY USE:
+- cube([x,y,z], center=true/false)
+- translate([x,y,z])
+- Variables like: width = 100;
+
+Start your response IMMEDIATELY with: width = 100;
+

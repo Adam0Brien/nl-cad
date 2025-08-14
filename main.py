@@ -4,6 +4,7 @@ Multi-Generator CLI - Supports BOSL, Cube-only, Maze, Enhanced, and Two-Stage ge
 """
 import click
 from pathlib import Path
+from generation.hybrid_generator import HybridCADGenerator
 from generation.bosl_generator import BOSLGenerator
 from generation.cube_generator import CubeGenerator
 from generation.maze_generator import MazeGenerator
@@ -81,8 +82,11 @@ def main(description, output, mode, test, speech, quick_speech):
         click.echo(f"💬 Starting Conversational Design Mode")
         run_conversational_mode(description or "interactive design session")
         return
-    else:  # bosl or default
+    elif mode.lower() == 'bosl':
         generator = BOSLGenerator()
+        click.echo(f"🔧 Using BOSL generator for mechanical parts")
+    else:  # bosl or default
+        generator = HybridCADGenerator()
         click.echo(f"🔧 Using BOSL generator for mechanical parts")
     
     # Generate code
@@ -103,29 +107,23 @@ def main(description, output, mode, test, speech, quick_speech):
 
 
 def run_tests():
-    """Run built-in test cases for all generators"""
-    click.echo("Running test cases for all generators...\n")
+    """Run built-in test cases"""
+    generator = HybridCADGenerator()
     
-    # BOSL Generator tests
-    click.echo("🔧 BOSL Generator Tests:")
-    click.echo("=" * 50)
-    bosl_generator = BOSLGenerator()
-    
-    bosl_test_cases = [
+    test_cases = [
+        # Catalog-based tests (should use fast path)
         "M8 x 25 bolt",
         "M6 x 20 fine thread bolt", 
         "cuboid 20mm 30mm 40mm",
         "cuboid 25mm with fillet 5mm",
         "cyl length 40mm diameter 25mm",
-        "3/8 inch washer",
-        "M10 nut"
+        "M10 nut",
+        
+        # Hybrid tests (should trigger AI completion or creative generation)
+        "storage box for screws",  # Should infer tray with reasonable dimensions
+        "hexagonal container 50mm wide",  # Should trigger creative AI generation
+        "small gear for robot project"  # Should infer reasonable gear parameters
     ]
-    
-    for test in bosl_test_cases:
-        click.echo(f"Input: {test}")
-        code = bosl_generator.generate(test)
-        click.echo(f"Output:\n{code}")
-        click.echo("-" * 30)
     
     # Enhanced Generator tests
     click.echo("\n⚡ Enhanced Generator Tests:")
@@ -164,6 +162,7 @@ def run_tests():
         code = cube_generator.generate(test)
         click.echo(f"Output:\n{code}")
         click.echo("-" * 30)
+    
     
     # Maze Generator tests
     click.echo("\n🌀 Maze Generator Tests:")

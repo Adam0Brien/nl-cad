@@ -29,7 +29,7 @@
         { "name": "fillet", "type": "float", "unit": "mm", "required": false, "synonyms": ["fillet", "round", "radius"] },
         { "name": "chamfer", "type": "float", "unit": "mm", "required": false, "synonyms": ["chamfer", "bevel"] }
       ],
-      "intent_keywords": ["cuboid", "cube", "box", "rectangular"]
+      "intent_keywords": ["cuboid", "cube", "rectangular", "solid block", "basic shape"]
     },
     {
       "id": "cyl",
@@ -100,7 +100,7 @@
         { "name": "dividers_height", "type": "float",  "unit": "mm", "required": false, "default": "height", "synonyms": ["divider height", "separator height"] },
         { "name": "dividers_thickness", "type": "float", "unit": "mm", "required": false, "default": "thickness", "synonyms": ["divider thickness", "separator thickness"] }
       ],
-      "intent_keywords": ["tray", "organizer", "organiser", "storage", "compartment", "divider", "box with dividers", "storage tray", "parts tray", "organiser tray", "organizer tray", "parts organizer", "parts organiser", "storage box", "divided box", "compartment box", "tool organizer", "tool organiser", "hardware organizer", "hardware organiser", "sorting box", "sorting tray"]
+      "intent_keywords": ["grid", "compartment", "compartments", "divider", "dividers", "organizer", "organiser", "storage box", "storage tray", "divided box", "compartment box", "box with dividers", "box with grid", "box with compartments", "parts tray", "parts organizer", "parts organiser", "tool organizer", "tool organiser", "hardware organizer", "hardware organiser", "sorting box", "sorting tray", "tray", "storage"]
     },
     {
       "id": "slider",

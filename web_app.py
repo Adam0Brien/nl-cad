@@ -10,6 +10,7 @@ import subprocess
 from pathlib import Path
 from flask import Flask, request, jsonify, render_template, send_file
 from generation.bosl_generator import BOSLGenerator
+from generation.hybrid_generator import HybridCADGenerator
 from generation.cube_generator import CubeGenerator
 from generation.maze_generator import MazeGenerator
 from conversation.conversation_manager import ConversationManager
@@ -21,7 +22,8 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 generators = {
     'bosl': BOSLGenerator(),
     'cube': CubeGenerator(),
-    'maze': MazeGenerator()
+    'maze': MazeGenerator(),
+    'hybrid': HybridCADGenerator()
 }
 
 # Global conversational session storage (in production, use Redis or database)
