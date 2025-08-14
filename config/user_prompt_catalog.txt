@@ -1,0 +1,6 @@
+Extract parameters from: "{description}"
+
+Return JSON: {{"component_id": "name", "param1": value1, "param2": value2}}
+
+Use millimeters. Only include parameters you can extract from the description.
+

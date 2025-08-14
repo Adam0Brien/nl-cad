@@ -1,7 +1,0 @@
-Request:
-{description}
-
-Available components:
-{component_list}
-
-Return JSON only (no prose), with component_id and params in millimeters. Omit any parameter you cannot extract explicitly.

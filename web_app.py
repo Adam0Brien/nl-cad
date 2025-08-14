@@ -8,13 +8,13 @@ import tempfile
 import subprocess
 from pathlib import Path
 from flask import Flask, request, jsonify, render_template, send_file
-from generation.bosl_generator import BOSLGenerator
+from generation.hybrid_generator import HybridCADGenerator
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
-# Initialize BOSL generator
-generator = BOSLGenerator()
+# Initialize Hybrid CAD generator
+generator = HybridCADGenerator()
 
 @app.route('/')
 def index():

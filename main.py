@@ -4,7 +4,7 @@ Simple BOSL Generator CLI - Easy to use and understand
 """
 import click
 from pathlib import Path
-from generation.bosl_generator import BOSLGenerator
+from generation.hybrid_generator import HybridCADGenerator
 from speech.speech_recognizer import speech_to_text_with_confirmation, quick_speech_to_text
 
 
@@ -56,7 +56,7 @@ def main(description, output, test, speech, quick_speech):
         return
     
     # Create generator and generate code
-    generator = BOSLGenerator()
+    generator = HybridCADGenerator()
     code = generator.generate(description)
     
     if output:
@@ -75,16 +75,21 @@ def main(description, output, test, speech, quick_speech):
 
 def run_tests():
     """Run built-in test cases"""
-    generator = BOSLGenerator()
+    generator = HybridCADGenerator()
     
     test_cases = [
+        # Catalog-based tests (should use fast path)
         "M8 x 25 bolt",
         "M6 x 20 fine thread bolt", 
         "cuboid 20mm 30mm 40mm",
         "cuboid 25mm with fillet 5mm",
         "cyl length 40mm diameter 25mm",
-        "3/8 inch washer",
-        "M10 nut"
+        "M10 nut",
+        
+        # Hybrid tests (should trigger AI completion or creative generation)
+        "storage box for screws",  # Should infer tray with reasonable dimensions
+        "hexagonal container 50mm wide",  # Should trigger creative AI generation
+        "small gear for robot project"  # Should infer reasonable gear parameters
     ]
     
     click.echo("Running test cases...\n")
