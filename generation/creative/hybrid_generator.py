@@ -11,8 +11,9 @@ import json
 import requests
 import os
 from .code_generator import CodeGenerator
-from .component_matcher import ComponentMatcher  
-from .parameter_extractor import ParameterExtractor
+from ..catalog.component_matcher import ComponentMatcher  
+from ..core.parameter_extractor import ParameterExtractor
+from .design_ai import DesignAI
 
 
 class ComponentNotFound(Exception):
@@ -45,26 +46,26 @@ class HybridCADGenerator:
         """Load specialized prompts for catalog vs creative generation"""
         # Catalog-based prompts (parameter extraction)
         try:
-            with open("config/catalog/system_prompt.txt", 'r') as f:
+            with open("config/catalog/bosl/system_prompt.txt", 'r') as f:
                 self.catalog_system_prompt = f.read()
         except FileNotFoundError:
             self.catalog_system_prompt = "Extract OpenSCAD component parameters from user descriptions."
             
         try:
-            with open("config/catalog/user_prompt.txt", 'r') as f:
+            with open("config/catalog/bosl/user_prompt.txt", 'r') as f:
                 self.catalog_user_prompt = f.read()
         except FileNotFoundError:
             self.catalog_user_prompt = "Extract parameters for: {description}"
             
         # Creative AI prompts (custom OpenSCAD generation)
         try:
-            with open("config/creative/system_prompt.txt", 'r') as f:
+            with open("config/creative/code/system_prompt.txt", 'r') as f:
                 self.creative_system_prompt = f.read()
         except FileNotFoundError:
             self.creative_system_prompt = "Generate OpenSCAD code using only cube() and translate()."
             
         try:
-            with open("config/creative/user_prompt.txt", 'r') as f:
+            with open("config/creative/code/user_prompt.txt", 'r') as f:
                 self.creative_user_prompt = f.read()
         except FileNotFoundError:
             self.creative_user_prompt = "Generate OpenSCAD code for: {description}"
@@ -74,12 +75,14 @@ class HybridCADGenerator:
         
     def generate(self, user_request):
         """
-        Main generation method with hybrid fallback logic
+        Main generation method with comprehensive fallback chain
         """
+        print(f"🔀 Hybrid generation for: '{user_request}'")
+        
+        # STRATEGY 1: Try BOSL catalog first (fastest for mechanical parts)
         try:
-            # STRATEGY 1: Fast catalog-based approach
+            print("🔧 Trying BOSL catalog generation...")
             return self._catalog_based_generation(user_request)
-            
         except ComponentNotFound:
             print("⚡ No catalog match - falling back to AI creative generation...")
             # STRATEGY 3: Creative AI generation
@@ -95,9 +98,12 @@ class HybridCADGenerator:
         Current catalog-based approach with better error handling
         """
         # Find component match
-        component = self.matcher.find_component(user_request)
-        if not component:
+        component_id = self.matcher.find_component(user_request)
+        if not component_id:
             raise ComponentNotFound(f"No component found for: {user_request}")
+        
+        # Get the component object from the catalog
+        component = self.matcher.components[component_id]
         
         # Extract parameters  
         parameters = self.extractor.extract_parameters(user_request, component, "")
@@ -214,3 +220,92 @@ Required format:
         provided = list(parameters.keys())
         missing = [param for param in required if param not in provided]
         return missing
+    
+    def _should_use_cube_generator(self, user_request):
+        """
+        Smart detection for furniture and objects that should use cube generator
+        """
+        furniture_keywords = [
+            'table', 'chair', 'bench', 'desk', 'shelf', 'cabinet', 'drawer',
+            'sofa', 'couch', 'bed', 'nightstand', 'dresser', 'wardrobe',
+            'bookcase', 'filing', 'storage', 'organizer', 'rack', 'stand',
+            'coffee', 'dining', 'kitchen', 'bathroom', 'bedroom', 'living',
+            'office', 'study', 'workshop', 'garage', 'patio', 'garden'
+        ]
+        
+        object_keywords = [
+            'house', 'building', 'tower', 'castle', 'bridge', 'car', 'truck',
+            'robot', 'figure', 'sculpture', 'art', 'decoration', 'ornament',
+            'toy', 'game', 'model', 'miniature', 'dollhouse', 'playset'
+        ]
+        
+        user_lower = user_request.lower()
+        
+        # Check for furniture keywords
+        for keyword in furniture_keywords:
+            if keyword in user_lower:
+                return True
+        
+        # Check for object keywords
+        for keyword in object_keywords:
+            if keyword in user_lower:
+                return True
+        
+        return False
+    
+    def _should_use_maze_generator(self, user_request):
+        """
+        Smart detection for maze-like requests
+        """
+        maze_keywords = [
+            'maze', 'labyrinth', 'puzzle', 'path', 'corridor', 'hallway',
+            'tunnel', 'passage', 'route', 'circuit', 'trail', 'track'
+        ]
+        
+        user_lower = user_request.lower()
+        
+        for keyword in maze_keywords:
+            if keyword in user_lower:
+                return True
+        
+        return False
+    
+    def _generate_with_cube_generator(self, user_request):
+        """
+        Generate voxel-style OpenSCAD code using cube generator approach
+        """
+        try:
+            # Import cube generator dynamically to avoid circular imports
+            from ..catalog.cube_generator import CubeGenerator
+            cube_gen = CubeGenerator()
+            return cube_gen.generate(user_request)
+        except Exception as e:
+            print(f"⚠️ Cube generator failed: {e} - falling back to AI generation")
+            # Fall back to AI generation if cube generator fails
+            return self._ai_generate_scad(user_request)
+    
+    def _generate_with_maze_generator(self, user_request):
+        """
+        Generate maze OpenSCAD code using maze generator approach
+        """
+        try:
+            # Import maze generator dynamically to avoid circular imports
+            from ..catalog.maze_generator import MazeGenerator
+            maze_gen = MazeGenerator()
+            return maze_gen.generate(user_request)
+        except Exception as e:
+            print(f"⚠️ Maze generator failed: {e}")
+            raise e
+    
+    def _generate_with_enhanced_generator(self, user_request):
+        """
+        Generate OpenSCAD code using enhanced generator approach
+        """
+        try:
+            # Import enhanced generator dynamically to avoid circular imports
+            from .enhanced_generator import EnhancedGenerator
+            enhanced_gen = EnhancedGenerator()
+            return enhanced_gen.generate(user_request)
+        except Exception as e:
+            print(f"⚠️ Enhanced generator failed: {e}")
+            raise e

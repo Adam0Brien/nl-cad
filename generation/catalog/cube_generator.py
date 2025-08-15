@@ -6,13 +6,13 @@ import re
 import os
 import requests
 from typing import Dict, List, Optional
-from .base_generator import BaseGenerator
+from ..core.base_generator import BaseGenerator
 
 
 class CubeGenerator(BaseGenerator):
     def __init__(self, 
-                 system_prompt_path: str = "config/cube_system_prompt.txt",
-                 user_prompt_path: str = "config/cube_user_prompt.txt"):
+                 system_prompt_path: str = "config/catalog/cube/system_prompt.txt",
+                 user_prompt_path: str = "config/catalog/cube/user_prompt.txt"):
         """Initialize with prompt files for cube-only generation"""
         super().__init__(system_prompt_path, user_prompt_path)
     

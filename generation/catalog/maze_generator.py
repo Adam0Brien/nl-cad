@@ -6,13 +6,13 @@ import re
 import os
 import random
 from typing import Dict, List, Optional, Tuple
-from .base_generator import BaseGenerator
+from ..core.base_generator import BaseGenerator
 
 
 class MazeGenerator(BaseGenerator):
     def __init__(self, 
-                 system_prompt_path: str = "config/maze_system_prompt.txt",
-                 user_prompt_path: str = "config/maze_user_prompt.txt"):
+                 system_prompt_path: str = "config/catalog/maze/system_prompt.txt",
+                 user_prompt_path: str = "config/catalog/maze/user_prompt.txt"):
         """Initialize with prompt files for maze generation"""
         super().__init__(system_prompt_path, user_prompt_path)
         

@@ -7,7 +7,7 @@ import re
 import os
 import requests
 from typing import Dict, List, Optional, Tuple, Any
-from .base_generator import BaseGenerator
+from ..core.base_generator import BaseGenerator
 
 
 class ConversationalGenerator(BaseGenerator):
