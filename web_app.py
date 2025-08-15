@@ -72,6 +72,12 @@ def get_modes():
                 'name': 'Conversational Design',
                 'description': 'Interactive design with questions and iterative examples',
                 'icon': '💬'
+            },
+            {
+                'id': 'hybrid',
+                'name': 'Smart Generator (Recommended)',
+                'description': 'Intelligently chooses the best generator: BOSL for parts, Cube for furniture, Maze for mazes',
+                'icon': '🤖'
             }
         ]
     })
@@ -82,7 +88,8 @@ def generate_scad():
     try:
         data = request.get_json()
         description = data.get('description', '').strip()
-        mode = data.get('mode', 'bosl').lower()
+        mode = data.get('mode', 'hybrid').lower()
+        print(f"🔧 Selected mode: {mode}")  # Debug what mode is actually being used
         
         if not description:
             return jsonify({'error': 'No description provided'}), 400

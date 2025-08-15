@@ -84,14 +84,36 @@ class HybridCADGenerator:
             print("🔧 Trying BOSL catalog generation...")
             return self._catalog_based_generation(user_request)
         except ComponentNotFound:
-            print("⚡ No catalog match - falling back to AI creative generation...")
-            # STRATEGY 3: Creative AI generation
-            return self._ai_generate_scad(user_request)
-            
+            print("⚡ BOSL catalog failed - trying cube generator...")
         except ParameterMissing as e:
-            print(f"🧠 Missing parameters: {e.missing_params} - using AI completion...")
-            # STRATEGY 2: AI parameter completion
-            return self._ai_complete_parameters(user_request, e.missing_params)
+            print(f"🧠 BOSL parameters incomplete - trying cube generator...")
+        
+        # STRATEGY 2: Try cube generator for furniture/objects
+        try:
+            if self._should_use_cube_generator(user_request):
+                print("🟦 Trying cube generator for voxel-style creation...")
+                return self._generate_with_cube_generator(user_request)
+        except Exception as e:
+            print(f"⚠️ Cube generator failed: {e} - trying maze generator...")
+        
+        # STRATEGY 3: Try maze generator for maze-like requests
+        try:
+            if self._should_use_maze_generator(user_request):
+                print("🌀 Trying maze generator...")
+                return self._generate_with_maze_generator(user_request)
+        except Exception as e:
+            print(f"⚠️ Maze generator failed: {e}")
+        
+        # STRATEGY 4: Try enhanced generator for complex objects
+        try:
+            print("⚡ Trying enhanced generator...")
+            return self._generate_with_enhanced_generator(user_request)
+        except Exception as e:
+            print(f"⚠️ Enhanced generator failed: {e}")
+        
+        # STRATEGY 5: Final fallback to AI creative generation
+        print("🎨 Final fallback to AI creative generation...")
+        return self._ai_generate_scad(user_request)
     
     def _catalog_based_generation(self, user_request):
         """

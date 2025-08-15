@@ -50,7 +50,7 @@ class BaseGenerator(ABC):
             print(f"📝 User prompt: {user_prompt[:100]}...")
             
             # Resolve Ollama configuration from environment
-            model = os.getenv("OLLAMA_MODEL", "deepseek-coder:6.7b")
+            model = os.getenv("OLLAMA_MODEL", "mistral:7b-instruct")
             base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
             try:
                 num_predict = int(os.getenv("OLLAMA_NUM_PREDICT", str(num_predict)))
@@ -214,9 +214,17 @@ class BaseGenerator(ABC):
                 skipped_lines += 1
                 continue
             
-            # Skip invalid variable assignments (OpenSCAD doesn't support variable assignment in many contexts)
-            if ' = ' in stripped and not stripped.startswith('//') and not any(keyword in stripped for keyword in ['module', 'function']):
-                print(f"⚠️  Skipping invalid variable assignment: {stripped[:50]}...")
+            # Fix invalid variable declarations (remove 'var' but keep the assignment)
+            if stripped.startswith('var ') and ' = ' in stripped:
+                # Convert 'var seatWidth = 100;' to 'seatWidth = 100;'
+                fixed_line = stripped.replace('var ', '')
+                print(f"🔧 Fixed variable declaration: {stripped[:50]}... -> {fixed_line[:50]}...")
+                cleaned_lines.append(fixed_line)
+                continue
+            
+            # Skip obvious non-code lines
+            if stripped.startswith(('Here', 'This', 'The', 'Note:', 'Remember:')):
+                print(f"⚠️  Skipping explanatory text: {stripped[:50]}...")
                 skipped_lines += 1
                 continue
                 
