@@ -13,7 +13,7 @@ import os
 from .code_generator import CodeGenerator
 from ..catalog.component_matcher import ComponentMatcher  
 from ..core.parameter_extractor import ParameterExtractor
-from .design_ai import DesignAI
+
 
 
 class ComponentNotFound(Exception):
