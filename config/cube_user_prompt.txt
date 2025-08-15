@@ -1,0 +1,12 @@
+Create a voxel/cube-based version of: {description}
+
+Requirements:
+- Use ONLY cube() primitives
+- Position cubes with translate()
+- Build the object layer by layer
+- Make it recognizable despite the blocky style
+- Use a consistent cube size (suggest 10x10x10 units)
+
+Think like you're building with LEGO blocks or in Minecraft.
+
+Return complete OpenSCAD code using only cubes.

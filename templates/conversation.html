@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NL-CAD - Conversational Design</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+        }
+
+        .chat-container {
+            display: flex;
+            height: 70vh;
+        }
+
+        .conversation-panel {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid #e5e7eb;
+        }
+
+        .code-panel {
+            flex: 1;
+            background: #f8fafc;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+
+        .message.user {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            margin-left: auto;
+        }
+
+        .message.assistant {
+            background: #f0fdf4;
+            border-left: 4px solid #10b981;
+        }
+
+        .questions {
+            margin-top: 10px;
+        }
+
+        .question {
+            background: #fef3c7;
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 6px;
+            border-left: 3px solid #f59e0b;
+            font-style: italic;
+        }
+
+        .progress-bar {
+            background: #e5e7eb;
+            height: 6px;
+            border-radius: 3px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #10b981, #3b82f6);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .input-area {
+            padding: 20px;
+            border-top: 1px solid #e5e7eb;
+            background: white;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #4f46e5;
+        }
+
+        .send-button {
+            padding: 12px 20px;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .send-button:hover {
+            background: #3730a3;
+        }
+
+        .send-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .code-header {
+            padding: 15px 20px;
+            background: #1f2937;
+            color: white;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .code-editor {
+            flex: 1;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8fafc;
+            border: none;
+            resize: none;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .code-actions {
+            padding: 15px 20px;
+            background: #f8fafc;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-button {
+            padding: 8px 16px;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .action-button:hover {
+            background: #f3f4f6;
+        }
+
+        .action-button.primary {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+
+        .action-button.primary:hover {
+            background: #059669;
+        }
+
+        .stage-indicator {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .stage-questioning { background: #fef3c7; color: #92400e; }
+        .stage-designing { background: #dbeafe; color: #1e40af; }
+        .stage-refining { background: #ede9fe; color: #5b21b6; }
+        .stage-complete { background: #d1fae5; color: #065f46; }
+
+        .welcome-message {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+        .welcome-message h2 {
+            margin-bottom: 10px;
+            color: #374151;
+        }
+
+        .start-form {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px;
+        }
+
+        .start-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .start-button {
+            background: #4f46e5;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .start-button:hover {
+            background: #3730a3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💬 Conversational Design</h1>
+            <p>Interactive 3D design with questions and iterative examples</p>
+        </div>
+
+        <div id="welcomeScreen" class="welcome-message">
+            <h2>Welcome to Conversational Design!</h2>
+            <p>Describe what you want to create, and I'll ask questions to help design exactly what you need.</p>
+            
+            <div class="start-form">
+                <input type="text" id="initialRequest" placeholder="What would you like to design? (e.g., 'a coffee table', 'a phone stand', 'a storage box')" class="start-input">
+                <br>
+                <button onclick="startConversation()" class="start-button">Start Designing</button>
+            </div>
+        </div>
+
+        <div id="chatInterface" style="display: none;">
+            <div class="chat-container">
+                <div class="conversation-panel">
+                    <div id="conversation"></div>
+                </div>
+                
+                <div class="code-panel">
+                    <div class="code-header">
+                        <span>Current Design</span>
+                        <span id="progressIndicator" class="stage-indicator">Getting Started</span>
+                    </div>
+                    <textarea id="codeEditor" class="code-editor" readonly placeholder="Your OpenSCAD code will appear here as we design together..."></textarea>
+                    <div class="code-actions">
+                        <button onclick="copyCode()" class="action-button">Copy Code</button>
+                        <button onclick="downloadCode()" class="action-button">Download .scad</button>
+                        <button onclick="generateSTL()" class="action-button primary">Generate STL</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <div class="input-container">
+                    <input type="text" id="userInput" placeholder="Type your response..." class="chat-input">
+                    <button onclick="sendMessage()" id="sendButton" class="send-button">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let sessionId = null;
+        let currentStage = 'questioning';
+
+        // Handle Enter key in input fields
+        document.getElementById('initialRequest').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') startConversation();
+        });
+
+        document.getElementById('userInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        async function startConversation() {
+            const description = document.getElementById('initialRequest').value.trim();
+            if (!description) {
+                alert('Please describe what you want to design!');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/conversation/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        description: description,
+                        session_id: 'session_' + Date.now()
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    sessionId = data.session_id;
+                    currentStage = data.stage;
+                    
+                    // Switch to chat interface
+                    document.getElementById('welcomeScreen').style.display = 'none';
+                    document.getElementById('chatInterface').style.display = 'block';
+                    
+                    // Add initial message
+                    addMessage('user', description);
+                    addAssistantMessage(data);
+                    
+                    // Focus on input
+                    document.getElementById('userInput').focus();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error starting conversation: ' + error.message);
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            
+            if (!message || !sessionId) return;
+
+            // Disable input while processing
+            input.disabled = true;
+            document.getElementById('sendButton').disabled = true;
+
+            try {
+                addMessage('user', message);
+                input.value = '';
+
+                const response = await fetch('/api/conversation/continue', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        user_input: message
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    currentStage = data.stage;
+                    addAssistantMessage(data);
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error sending message: ' + error.message);
+            } finally {
+                // Re-enable input
+                input.disabled = false;
+                document.getElementById('sendButton').disabled = false;
+                input.focus();
+            }
+        }
+
+        function addMessage(sender, content) {
+            const conversation = document.getElementById('conversation');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            messageDiv.innerHTML = `<strong>${sender === 'user' ? 'You' : 'Assistant'}:</strong> ${content}`;
+            conversation.appendChild(messageDiv);
+            conversation.scrollTop = conversation.scrollHeight;
+        }
+
+        function addAssistantMessage(data) {
+            const conversation = document.getElementById('conversation');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message assistant';
+            
+            let content = `<strong>Assistant:</strong> ${data.message}`;
+            
+            // Add progress bar
+            if (data.progress) {
+                content += `<div class="progress-bar"><div class="progress-fill" style="width: ${data.progress}%"></div></div>`;
+            }
+            
+            // Add questions
+            if (data.questions && data.questions.length > 0) {
+                content += '<div class="questions">';
+                data.questions.forEach(question => {
+                    content += `<div class="question">💭 ${question}</div>`;
+                });
+                content += '</div>';
+            }
+            
+            messageDiv.innerHTML = content;
+            conversation.appendChild(messageDiv);
+            conversation.scrollTop = conversation.scrollHeight;
+
+            // Update code editor
+            if (data.code) {
+                document.getElementById('codeEditor').value = data.code;
+            }
+
+            // Update stage indicator
+            updateStageIndicator(data.stage, data.progress || 0);
+        }
+
+        function updateStageIndicator(stage, progress) {
+            const indicator = document.getElementById('progressIndicator');
+            indicator.className = `stage-indicator stage-${stage}`;
+            
+            const stageNames = {
+                'questioning': 'Asking Questions',
+                'designing': 'Creating Design', 
+                'refining': 'Refining Details',
+                'complete': 'Design Complete'
+            };
+            
+            indicator.textContent = stageNames[stage] || stage;
+        }
+
+        function copyCode() {
+            const code = document.getElementById('codeEditor').value;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Code copied to clipboard!');
+            });
+        }
+
+        function downloadCode() {
+            const code = document.getElementById('codeEditor').value;
+            if (!code.trim()) {
+                alert('No code to download yet!');
+                return;
+            }
+            
+            const blob = new Blob([code], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'design.scad';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        async function generateSTL() {
+            const code = document.getElementById('codeEditor').value;
+            if (!code.trim()) {
+                alert('No code to convert to STL yet!');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/generate_stl', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        scad_code: code,
+                        filename: 'conversational_design'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('STL generated successfully! Check the models section.');
+                } else {
+                    alert('Error generating STL: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error generating STL: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
