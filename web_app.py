@@ -9,10 +9,10 @@ import tempfile
 import subprocess
 from pathlib import Path
 from flask import Flask, request, jsonify, render_template, send_file
-from generation.bosl_generator import BOSLGenerator
-from generation.hybrid_generator import HybridCADGenerator
-from generation.cube_generator import CubeGenerator
-from generation.maze_generator import MazeGenerator
+from generation.catalog.bosl_generator import BOSLGenerator
+from generation.creative.hybrid_generator import HybridCADGenerator
+from generation.catalog.cube_generator import CubeGenerator
+from generation.catalog.maze_generator import MazeGenerator
 from conversation.conversation_manager import ConversationManager
 
 app = Flask(__name__)
@@ -72,6 +72,12 @@ def get_modes():
                 'name': 'Conversational Design',
                 'description': 'Interactive design with questions and iterative examples',
                 'icon': '💬'
+            },
+            {
+                'id': 'hybrid',
+                'name': 'Smart Generator (Recommended)',
+                'description': 'Intelligently chooses the best generator: BOSL for parts, Cube for furniture, Maze for mazes',
+                'icon': '🤖'
             }
         ]
     })
@@ -82,7 +88,8 @@ def generate_scad():
     try:
         data = request.get_json()
         description = data.get('description', '').strip()
-        mode = data.get('mode', 'bosl').lower()
+        mode = data.get('mode', 'hybrid').lower()
+        print(f"🔧 Selected mode: {mode}")  # Debug what mode is actually being used
         
         if not description:
             return jsonify({'error': 'No description provided'}), 400

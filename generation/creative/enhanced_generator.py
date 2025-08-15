@@ -7,15 +7,15 @@ import re
 import os
 import requests
 from typing import Dict, List, Optional
-from .base_generator import BaseGenerator
+from ..core.base_generator import BaseGenerator
 
 
 class EnhancedGenerator(BaseGenerator):
     """Enhanced generator that can use both local and cloud LLMs"""
     
     def __init__(self, 
-                 system_prompt_path: str = "config/enhanced_system_prompt.txt",
-                 user_prompt_path: str = "config/enhanced_user_prompt.txt"):
+                 system_prompt_path: str = "config/creative/code/system_prompt.txt",
+                 user_prompt_path: str = "config/creative/code/user_prompt.txt"):
         super().__init__(system_prompt_path, user_prompt_path)
         
         # Check if OpenAI API key is available

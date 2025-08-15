@@ -6,22 +6,22 @@ from pathlib import Path
 from typing import Dict
 
 from .component_matcher import ComponentMatcher
-from .parameter_extractor import ParameterExtractor
-from .code_generator import CodeGenerator
-from .validators import Validators
+from ..core.parameter_extractor import ParameterExtractor
+from ..creative.code_generator import CodeGenerator
+from ..core.validators import Validators
 
 
 class BOSLGenerator:
     def __init__(self, catalog_path: str = "data/bosl_catalog.json", 
-                 system_prompt_path: str = "config/system_prompt.txt",
-                 user_prompt_path: str = "config/user_prompt.txt"):
+                 system_prompt_path: str = "config/catalog/bosl/system_prompt.txt",
+                 user_prompt_path: str = "config/catalog/bosl/user_prompt.txt"):
         """Initialize with the component catalog and prompt files"""
         self.components = self._load_catalog(catalog_path)
         system_prompt = self._load_prompt(system_prompt_path)
         user_prompt = self._load_prompt(user_prompt_path)
         
-        # Initialize modules
-        self.matcher = ComponentMatcher(self.components)
+        # Initialize modules - pass catalog_path, not loaded components
+        self.matcher = ComponentMatcher(catalog_path)
         self.extractor = ParameterExtractor(system_prompt, user_prompt)
         self.generator = CodeGenerator()
         self.validator = Validators()

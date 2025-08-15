@@ -21,10 +21,10 @@ class ComponentMatcher:
         if any(k in description_lower for k in threading_keywords):
             if any(k in description_lower for k in ["rod", "screw", "acme"]):
                 if "trapezoidal_threaded_rod" in self.components:
-                    return self.components["trapezoidal_threaded_rod"]
+                    return "trapezoidal_threaded_rod"
         
         # Score components by keyword matches
-        best_match = None
+        best_match_id = None
         best_score = 0
         
         for comp_id, comp in self.components.items():
@@ -33,6 +33,6 @@ class ComponentMatcher:
             
             if score > best_score:
                 best_score = score
-                best_match = comp
+                best_match_id = comp_id
         
-        return best_match
+        return best_match_id

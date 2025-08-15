@@ -4,12 +4,12 @@ Multi-Generator CLI - Supports BOSL, Cube-only, Maze, Enhanced, and Two-Stage ge
 """
 import click
 from pathlib import Path
-from generation.hybrid_generator import HybridCADGenerator
-from generation.bosl_generator import BOSLGenerator
-from generation.cube_generator import CubeGenerator
-from generation.maze_generator import MazeGenerator
-from generation.enhanced_generator import EnhancedGenerator
-from generation.two_stage_generator import TwoStageGenerator
+from generation.creative.hybrid_generator import HybridCADGenerator
+from generation.catalog.bosl_generator import BOSLGenerator
+from generation.catalog.cube_generator import CubeGenerator
+from generation.catalog.maze_generator import MazeGenerator
+from generation.creative.enhanced_generator import EnhancedGenerator
+from generation.creative.two_stage_generator import TwoStageGenerator
 from conversation.conversation_manager import ConversationManager
 from speech.speech_recognizer import speech_to_text_with_confirmation, quick_speech_to_text
 

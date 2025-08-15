@@ -8,17 +8,17 @@ import re
 import os
 import requests
 from typing import Dict, List, Optional, Tuple
-from .base_generator import BaseGenerator
+from ..core.base_generator import BaseGenerator
 
 
 class TwoStageGenerator(BaseGenerator):
     """Two-stage generator: Design → Code with separate optimized models"""
     
     def __init__(self, 
-                 design_system_prompt_path: str = "config/design_system_prompt.txt",
-                 design_user_prompt_path: str = "config/design_user_prompt.txt",
-                 code_system_prompt_path: str = "config/code_system_prompt.txt",
-                 code_user_prompt_path: str = "config/code_user_prompt.txt",
+                 design_system_prompt_path: str = "config/creative/design/system_prompt.txt",
+                 design_user_prompt_path: str = "config/creative/design/user_prompt.txt",
+                 code_system_prompt_path: str = "config/creative/code/system_prompt.txt",
+                 code_user_prompt_path: str = "config/creative/code/user_prompt.txt",
                  design_model: str = None,
                  code_model: str = None):
         # Initialize with design prompts first

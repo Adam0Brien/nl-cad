@@ -198,7 +198,7 @@
             border-radius: 10px;
             font-family: 'Courier New', monospace;
             font-size: 14px;
-            max-height: 300px;
+            max-height: 500px;
             overflow-y: auto;
             white-space: pre-wrap;
             display: none;
@@ -248,6 +248,23 @@
             to { transform: rotate(360deg); }
         }
 
+        select {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
         @media (max-width: 768px) {
             .container {
                 grid-template-columns: 1fr;
@@ -285,6 +302,16 @@
                         id="description" 
                         placeholder="Example: M8 bolt 25mm long, or cylinder 40mm long 25mm diameter, or gear 20 teeth 5mm pitch..."
                     ></textarea>
+                </div>
+                
+                <div class="input-group">
+                    <label for="generatorMode">Generator Mode:</label>
+                    <select id="generatorMode">
+                        <option value="hybrid">🧠 Smart Generator (Recommended)</option>
+                        <option value="bosl">🔧 BOSL Generator - Mechanical Parts</option>
+                        <option value="cube">🧊 Cube Generator - Voxel Style</option>
+                        <option value="maze">🌀 Maze Generator</option>
+                    </select>
                 </div>
                 
                 <div class="button-group">
@@ -459,7 +486,10 @@
                 const response = await fetch('/api/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ description })
+                    body: JSON.stringify({ 
+                        description,
+                        mode: document.getElementById('generatorMode').value 
+                    })
                 });
 
                 const data = await response.json();
