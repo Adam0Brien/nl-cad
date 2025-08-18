@@ -14,6 +14,7 @@ from generation.creative.hybrid_generator import HybridCADGenerator
 from generation.catalog.cube_generator import CubeGenerator
 from generation.catalog.maze_generator import MazeGenerator
 from conversation.conversation_manager import ConversationManager
+from generation.creative.two_stage_generator import TwoStageGenerator
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
@@ -23,7 +24,8 @@ generators = {
     'bosl': BOSLGenerator(),
     'cube': CubeGenerator(),
     'maze': MazeGenerator(),
-    'hybrid': HybridCADGenerator()
+    'hybrid': HybridCADGenerator(),
+    'two-stage': TwoStageGenerator()
 }
 
 # Global conversational session storage (in production, use Redis or database)
@@ -78,6 +80,12 @@ def get_modes():
                 'name': 'Smart Generator (Recommended)',
                 'description': 'Intelligently chooses the best generator: BOSL for parts, Cube for furniture, Maze for mazes',
                 'icon': '🤖'
+            },
+            {
+                'id': 'two-stage',
+                'name': 'Two Stage Generator',
+                'description': 'Two stage generator: first design, then code',
+                'icon': '🎭'
             }
         ]
     })
